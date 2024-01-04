@@ -1,0 +1,2 @@
+##36913E4E5445F708002A53C8BF08BA08##
+                e.%%property-name%%.ToLower().Contains(filterText.ToLower())

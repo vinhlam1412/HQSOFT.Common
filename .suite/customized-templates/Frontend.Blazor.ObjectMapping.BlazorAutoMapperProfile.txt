@@ -1,0 +1,4 @@
+##27F77E47392372E52E7D28D38F5E39EE##
+            CreateMap<%%entity-name%%Dto, %%entity-name%%UpdateDto>()%%nc-ignore%%;
+            CreateMap<%%entity-name%%Dto, %%entity-name%%CreateDto>()%%nc-ignore%%;
+            CreateMap<%%entity-name%%UpdateDto, %%entity-name%%CreateDto>()%%nc-ignore%%;

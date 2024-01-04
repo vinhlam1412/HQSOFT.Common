@@ -1,0 +1,174 @@
+@page "/Common/TestCommons"
+
+@rendermode InteractiveServer
+@attribute [Authorize(CommonPermissions.TestCommons.Default)]
+@using HQSOFT.Common.Comments;
+@using Microsoft.AspNetCore.Http
+@using global::HQSOFT.Common.Shared
+@using global::HQSOFT.Common.TestCommons
+@using global::HQSOFT.Common.Permissions
+@using global::HQSOFT.Common.Localization
+@using global::HQSOFT.Common.Blazor.Pages.Component
+
+@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components
+@using Microsoft.Extensions.Configuration;
+@using Microsoft.Extensions.Localization
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
+@using System.ComponentModel.DataAnnotations
+
+@using Blazorise.Components
+@using DevExpress.Blazor
+@using DevExpress.Blazor.Grid
+
+@using Volo.Abp.Http.Client
+@using Volo.Abp.BlazoriseUI
+@using Volo.Abp.ObjectMapping
+@using Volo.Abp.BlazoriseUI.Components
+@using Volo.Abp.AspNetCore.Components.Web
+@using Volo.Abp.AspNetCore.Components.Messages
+@using Volo.Abp.AspNetCore.Components.Web.Theming.Layout
+
+@inherits CommonComponentBase
+@inject IJSRuntime JSRuntime
+@inject IConfiguration Configuration
+@inject ITestCommonsAppService TestCommonsAppService
+@inject IUiMessageService UiMessageService
+@inject ICommentsAppService CommentsAppService
+@inject IRemoteServiceConfigurationProvider RemoteServiceConfigurationProvider
+@inject IHttpContextAccessor HttpContextAccessor
+@inject NavigationManager NavigationManager
+
+<HeadOutlet @rendermode="InteractiveServer" />
+
+ @* ************************* PAGE HEADER ************************* *@
+<PageHeader BreadcrumbItems="BreadcrumbItems" Toolbar="Toolbar" />
+<NavigationLock OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
+
+
+ @* ************************* FORM HEADER ************************* *@
+ <Row>
+	 <Card Style="width:150px;height:150px">
+		 <CardBody>
+			 <HQSOFTNotifications PostID="EditingTestCommonId"></HQSOFTNotifications>
+		 </CardBody>
+	 </Card>
+ </Row>
+<Row>
+	<Column>
+		<Card>
+			<CardBody>
+				<Form id="OrderSearchForm" class="mb-3">
+					<Blazorise.Row>
+						<Addons>
+							<Addon AddonType="AddonType.Body">
+								<TextEdit @bind-Text="@Filter.FilterText"
+										  Autofocus="true"
+										  Placeholder="@L["Search"]">
+								</TextEdit>
+							</Addon>
+							<Addon AddonType="AddonType.End">
+								<SubmitButton Form="OrderSearchForm" Clicked="GetTestCommonsAsync">
+									<Icon Name="IconName.Search" Class="me-1"></Icon>@L["Search"]
+								</SubmitButton>
+							</Addon>
+						</Addons>
+					</Blazorise.Row>
+				</Form>
+			</CardBody>
+		</Card>
+		<Card>
+			<CardBody>
+				<Blazorise.Row>
+					<DxGrid @ref="GridTestCommon"
+							Data="@TestCommonList"
+							@bind-SelectedDataItems="@SelectedTestCommons"
+							SelectionMode="GridSelectionMode.Multiple"
+							AllowSelectRowByClick="true"
+							EditMode="GridEditMode.EditRow"
+							EditNewRowPosition="GridEditNewRowPosition.Bottom"
+							PageSize="@PageSize"
+							PagerPosition="GridPagerPosition.Top"
+							PageSizeSelectorVisible="true"
+							PageSizeSelectorItems="@(new int[] { 10, 20, 100, 500 })"
+							PageSizeSelectorAllRowsItemVisible="true"
+							PagerSwitchToInputBoxButtonCount="@PageSize"
+							PagerVisibleNumericButtonCount="@PageSize"
+							PagerNavigationMode="PagerNavigationMode.InputBox"
+							FocusedRowEnabled="true"
+							RowClick="GridTestCommon_OnRowClick"
+							RowDoubleClick="GridTestCommon_OnRowDoubleClick"
+							FocusedRowChanged="GridTestCommon_OnFocusedRowChanged"
+							CustomizeEditModel="GridTestCommon_OnCustomizeEditModel"
+							EditModelSaving="GridTestCommon_EditModelSaving"
+							CustomizeDataRowEditor="GridTestCommon_CustomizeDataRowEditor"
+							EditorRenderMode="GridEditorRenderMode.Integrated"
+							KeyboardNavigationEnabled="true" @onkeydown="GridTestCommon_OnKeyDown">
+						<Columns>
+							<DxGridSelectionColumn Width="5px" />
+							<DxGridDataColumn ReadOnly="true" FieldName="Idx" Width="5px" Caption="#" TextAlignment="GridTextAlignment.Center"
+											  SortIndex="0" SortOrder="GridColumnSortOrder.Ascending">
+								<EditSettings>
+									<DxSpinEditSettings ShowSpinButtons="false" ReadOnly="true" />
+								</EditSettings>
+							</DxGridDataColumn>
+							<DxGridDataColumn Name="Code" FieldName="Code" Width="150px" Caption="@L["Code"]">
+								<CellEditTemplate>
+									@{
+										GridTestCommonEditContext = context.EditContext;
+									}
+									<CascadingValue Name="FocusOnEditStart" Value="context.DataColumn.Name == FocusedColumn">
+										<DxTextBox Text="@(((TestCommonUpdateDto)context.EditModel != null)? ((TestCommonUpdateDto)context.EditModel).Code:"")"
+												   TextExpression="@(() => ((TestCommonUpdateDto)context.EditModel).Code)"
+												   TextChanged="@((newValue) => {
+                                                    IsDataEntryChanged = true;
+                                                    ((TestCommonUpdateDto)context.EditModel).Code = newValue.ToUpper();
+
+                                })"
+												   BindValueMode="BindValueMode.OnLostFocus"
+												   InputCssClass="focus-value"
+												   ShowValidationIcon="true" />
+									</CascadingValue>
+								</CellEditTemplate>
+							</DxGridDataColumn>
+							<DxGridDataColumn Name="Name" FieldName="Name" Caption="@L["Name"]">
+								<CellEditTemplate>
+									<CascadingValue Name="FocusOnEditStart" Value="context.DataColumn.Name == FocusedColumn">
+										<DxTextBox @bind-Text="((TestCommonUpdateDto)context.EditModel).Name" InputCssClass="focus-value" />
+									</CascadingValue>
+								</CellEditTemplate>
+							</DxGridDataColumn>
+						</Columns>
+					</DxGrid>
+					<Div class="mt-1 bt-1">
+						<Button Clicked="BtnAdd_GridTestCommon_OnClick" Size="Blazorise.Size.Small" Disabled="!CanCreateTestCommon|| !CanEditTestCommon">
+							<Icon Name="IconName.Add" TextColor="TextColor.Primary" />
+						</Button>
+						<Button Clicked="GridTestCommon.CancelEditAsync" Size="Blazorise.Size.Small">
+							<Icon Name="IconName.Undo" TextColor="TextColor.Secondary" />
+						</Button>
+						<Button Clicked="BtnDelete_GridTestCommon_OnClick" Size="Blazorise.Size.Small" Disabled="!CanDeleteTestCommon">
+							<Icon Name="IconName.Delete" TextColor="TextColor.Danger" />
+						</Button>
+					</Div>
+				</Blazorise.Row>
+			</CardBody>
+		</Card>
+		<Div>
+			<HQSOFTComment TableName="@L["Menu:TestCommons"]" OnCommentAdded="HandleCommentAdded" DocId="@EditingTestCommonId" Url="/AccountReceivable/CustomerClasses" />
+		</Div>
+		<Div>
+			<HQSOFTFormActivity DocId="EditingTestCommonId" Url="/AccountReceivable/CustomerClasses" @ref="@formActivity" />
+		</Div>
+
+	</Column>
+	<Column Display="@(ShowInteractionForm?Display.None.Block.OnDesktop:Display.None)" ColumnSize="ColumnSize.Is2">
+		<HQSOFTInteractionForm TableName="@L["Menu:TestCommons"]" TypeTable="content" DocId="@EditingTestCommonId" Url="/AccountReceivable/CustomerClasses" />
+	</Column>
+</Row>
+
+

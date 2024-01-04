@@ -1,0 +1,68 @@
+﻿@rendermode InteractiveServer
+
+@using HQSOFT.Common.Shared;
+@using HQSOFT.Common.Permissions;
+@using HQSOFT.Common.Notifications
+
+@using Microsoft.AspNetCore.Authorization;
+@using Microsoft.AspNetCore.Components.Authorization;
+@using Microsoft.AspNetCore.Components.Forms;
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
+@using Microsoft.AspNetCore.Http
+@using Microsoft.AspNetCore.SignalR.Client
+@using Microsoft.Extensions.Configuration;
+
+@using MudBlazor
+
+@using Volo.Abp.Application.Dtos;
+@using Volo.Abp.MultiTenancy
+@using Volo.Abp.Identity
+
+@using Blazorise.Components
+
+@inherits CommonComponentBase
+@inject NavigationManager NavigationManager
+@inject IConfiguration Configuration
+@inject ICurrentTenant CurrentTenant
+@inject INotificationsAppService NotificationsAppService
+@inject IHttpContextAccessor HttpContextAccessor
+
+
+<MudThemeProvider />
+
+@********************************************************NOTIFICATION***********************************************@
+@if (CurrentUser.IsAuthenticated)
+{
+    <div id="dropdown-target-container" style="position:relative">
+    </div>
+    <MudBadge Color="MudBlazor.Color.Dark" Dot="@ShowNotiDot" Class="mx-6 my-4">
+        <MudIcon Icon="@Icons.Material.Filled.Notifications" Size="MudBlazor.Size.Medium" Color="MudBlazor.Color.Default" @onclick="() => IsOpen = !IsOpen" />
+    </MudBadge>
+
+    <DxDropDown @bind-IsOpen="@IsOpen" style="position:absolute;top:0;right:0"
+                HeaderVisible="true"
+                HeaderText="@L["Notifications"]"
+                MaxWidth="max(25vw, 500px)"
+                Width="max(25vw, 500px)"
+                VerticalOffset="10"
+                PositionMode="DropDownPositionMode.MousePoint"
+                CloseMode="DropDownCloseMode.Close"
+                PreventCloseOnPositionTargetClick="true">
+        <BodyContentTemplate>
+            <DxListBox Data="@NotificationList"
+                       @bind-Value="@SelectedNotification"
+                       style="border:none; width:100%">
+                <ItemTemplate Context="listBoxContext">
+                    <Div class="listbox-item-template" @onclick="(()=>GoToEditPage(listBoxContext))">
+                        <img src="@(authServerUrl + "/api/account/profile-picture-file/" + listBoxContext.FromUserId.ToString())" />
+                        <Div class="listbox-item-template-text">
+                            <span>@listBoxContext.NotiTitle</span>
+                            <span class="listbox-item-template-text-phone">@listBoxContext.CreationTime</span>
+                        </Div>
+                    </Div>
+                </ItemTemplate>
+            </DxListBox>
+            <div><a href="/Common/Notifications">See All</a></div>
+        </BodyContentTemplate>
+    </DxDropDown>
+} 

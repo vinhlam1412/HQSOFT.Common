@@ -1,0 +1,277 @@
+@page "/Common/TaskAssignments"
+
+
+
+@attribute [Authorize(CommonPermissions.TaskAssignments.Default)]
+@using global::HQSOFT.Common.TaskAssignments
+@using global::HQSOFT.Common.Localization
+@using global::HQSOFT.Common.Shared
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.Extensions.Localization
+@using Microsoft.AspNetCore.Components.Web
+@using Blazorise
+@using Blazorise.Components
+@using Blazorise.DataGrid
+@using Volo.Abp.BlazoriseUI
+@using Volo.Abp.BlazoriseUI.Components
+@using Volo.Abp.ObjectMapping
+@using Volo.Abp.AspNetCore.Components.Messages
+@using Volo.Abp.AspNetCore.Components.Web.Theming.Layout
+@using global::HQSOFT.Common.Permissions
+@using Microsoft.AspNetCore.Components
+@using Volo.Abp.AspNetCore.Components.Web
+@using Volo.Abp.Http.Client
+@inherits CommonComponentBase
+@inject ITaskAssignmentsAppService TaskAssignmentsAppService
+@inject IUiMessageService UiMessageService
+@inject IRemoteServiceConfigurationProvider RemoteServiceConfigurationProvider
+@inject NavigationManager NavigationManager
+
+@* ************************* PAGE HEADER ************************* *@
+<PageHeader Title="@L["TaskAssignments"]" BreadcrumbItems="BreadcrumbItems" Toolbar="Toolbar">
+
+</PageHeader>
+
+@* ************************* SEARCH ************************* *@
+<Card>
+    <CardBody>
+        <Form id="TaskAssignmentSearchForm" class="mb-3">
+            <Addons>
+                <Addon AddonType="AddonType.Body">
+                    <TextEdit @bind-Text="@Filter.FilterText"
+                              Autofocus="true"
+                              Placeholder="@L["Search"]">
+                    </TextEdit>
+                </Addon>
+                <Addon AddonType="AddonType.End">
+                    <SubmitButton Form="TaskAssignmentSearchForm" Clicked="GetTaskAssignmentsAsync">
+                        <Icon Name="IconName.Search" Class="me-1"></Icon>@L["Search"]
+                    </SubmitButton>
+                </Addon>
+            </Addons>
+        </Form>
+    </CardBody>
+</Card>
+
+@* ************************* DATA GRID ************************* *@
+<Card>
+    <CardBody>
+        <DataGrid TItem="TaskAssignmentDto"
+                  Data="TaskAssignmentList"
+                  ReadData="OnDataGridReadAsync"
+                  TotalItems="TotalCount"
+                  ShowPager="true"
+                  Responsive="true"
+                  PageSize="PageSize">
+            <DataGridColumns>
+                <DataGridEntityActionsColumn TItem="TaskAssignmentDto" @ref="@EntityActionsColumn">
+                    <DisplayTemplate>
+                        <EntityActions TItem="TaskAssignmentDto" EntityActionsColumn="@EntityActionsColumn">
+                            <EntityAction TItem="TaskAssignmentDto"
+                                          Visible="@CanEditTaskAssignment"
+                                          Clicked="async () => await OpenEditTaskAssignmentModalAsync(context)"
+                                          Text="@L["Edit"]"></EntityAction>
+                            <EntityAction TItem="TaskAssignmentDto"
+                                          Visible="@CanDeleteTaskAssignment"
+                                          Clicked="() => DeleteTaskAssignmentAsync(context)"
+                                          ConfirmationMessage="@(()=> L["DeleteConfirmationMessage"])"
+                                          Text="@L["Delete"]"></EntityAction>
+                        </EntityActions>
+                    </DisplayTemplate>
+                </DataGridEntityActionsColumn>
+               
+
+
+              <DataGridColumn TItem="TaskAssignmentDto"
+                      Field="Url"
+                      Caption="@L["Url"]">
+              </DataGridColumn>
+
+              <DataGridColumn TItem="TaskAssignmentDto"
+                      Field="DueDate"
+                      Caption="@L["DueDate"]">
+                  <DisplayTemplate>
+                        @context.DueDate.ToShortDateString()
+                  </DisplayTemplate>
+              </DataGridColumn>
+
+              <DataGridColumn TItem="TaskAssignmentDto"
+                      Field="Priority"
+                      Caption="@L["Priority"]">
+              </DataGridColumn>
+
+              <DataGridColumn TItem="TaskAssignmentDto"
+                      Field="Comment"
+                      Caption="@L["Comment"]">
+              </DataGridColumn>
+
+
+
+            </DataGridColumns>
+        </DataGrid>
+    </CardBody>
+</Card>
+
+@* ************************* CREATE MODAL ************************* *@
+<Modal @ref="CreateTaskAssignmentModal" Closing="@CreateTaskAssignmentModal.CancelClosingModalWhenFocusLost">
+    <ModalContent Centered="true">
+        <Form id="CreateTaskAssignmentForm">
+            <ModalHeader>
+                <ModalTitle>@L["NewTaskAssignment"]</ModalTitle>
+                <CloseButton Clicked="CloseCreateTaskAssignmentModalAsync" />
+            </ModalHeader>
+            <ModalBody>
+                <Validations @ref="@NewTaskAssignmentValidations"
+                            Mode="ValidationMode.Auto"
+                            Model="@NewTaskAssignment"
+                            ValidateOnLoad="false">
+                     
+                    
+
+
+                    <Validation>
+                        <Field>
+                            <FieldLabel>@L["Url"] *</FieldLabel>
+                            <TextEdit @bind-Text="@NewTaskAssignment.Url"  >
+                                <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                            </TextEdit>
+                        </Field>
+                    </Validation>
+
+
+                    <Validation>
+                        <Field>
+                            <FieldLabel>@L["DueDate"]</FieldLabel>
+                            <DateEdit TValue="DateTime" InputMode="DateInputMode.DateTime" @bind-Date="@NewTaskAssignment.DueDate" >
+                               <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                            </DateEdit>
+                        </Field>
+                    </Validation>
+
+
+                    <Validation>
+                        <Field>
+                            <FieldLabel>@L["Priority"]</FieldLabel>
+                            <TextEdit @bind-Text="@NewTaskAssignment.Priority"  >
+                                <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                            </TextEdit>
+                        </Field>
+                    </Validation>
+
+
+                    <Validation>
+                        <Field>
+                            <FieldLabel>@L["Comment"]</FieldLabel>
+                            <TextEdit @bind-Text="@NewTaskAssignment.Comment"  >
+                                <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                            </TextEdit>
+                        </Field>
+                    </Validation>
+
+
+
+
+                    
+                    
+                </Validations>
+            </ModalBody>
+            <ModalFooter>
+                <Button Color="Blazorise.Color.Secondary"
+                        Clicked="CloseCreateTaskAssignmentModalAsync">
+                    @L["Cancel"]
+                </Button>
+                <SubmitButton Form="CreateTaskAssignmentForm" Clicked="CreateTaskAssignmentAsync" />
+            </ModalFooter>
+        </Form>
+    </ModalContent>
+</Modal>
+
+@* ************************* EDIT MODAL ************************* *@
+<Modal @ref="EditTaskAssignmentModal" Closing="@EditTaskAssignmentModal.CancelClosingModalWhenFocusLost">
+    <ModalContent Centered="true">
+        <Form id="EditTaskAssignmentForm">
+            <ModalHeader>
+                <ModalTitle>@L["Update"]</ModalTitle>
+                <CloseButton Clicked="CloseEditTaskAssignmentModalAsync" />
+            </ModalHeader>
+            <ModalBody>
+                <Validations @ref="@EditingTaskAssignmentValidations"
+                            Mode="ValidationMode.Auto"
+                            Model="@EditingTaskAssignment"
+                            ValidateOnLoad="false">
+                     
+                    
+
+
+                    <Validation>
+                        <Field>
+                            <FieldLabel>@L["Url"] *</FieldLabel>
+                            <TextEdit @bind-Text="@EditingTaskAssignment.Url"  >
+                                <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                            </TextEdit>
+                        </Field>
+                    </Validation>
+
+
+                    <Validation>
+                        <Field>
+                            <FieldLabel>@L["DueDate"]</FieldLabel>
+                            <DateEdit TValue="DateTime" InputMode="DateInputMode.DateTime" @bind-Date="@EditingTaskAssignment.DueDate" >
+                               <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                            </DateEdit>
+                        </Field>
+                    </Validation>
+
+
+                    <Validation>
+                        <Field>
+                            <FieldLabel>@L["Priority"]</FieldLabel>
+                            <TextEdit @bind-Text="@EditingTaskAssignment.Priority"  >
+                                <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                            </TextEdit>
+                        </Field>
+                    </Validation>
+
+
+                    <Validation>
+                        <Field>
+                            <FieldLabel>@L["Comment"]</FieldLabel>
+                            <TextEdit @bind-Text="@EditingTaskAssignment.Comment"  >
+                                <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                            </TextEdit>
+                        </Field>
+                    </Validation>
+
+
+
+
+                    
+                    
+                </Validations>
+            </ModalBody>
+            <ModalFooter>
+                <Button Color="Blazorise.Color.Secondary"
+                        Clicked="CloseEditTaskAssignmentModalAsync">
+                    @L["Cancel"]
+                </Button>
+                <SubmitButton Form="CreateTaskAssignmentForm" Clicked="UpdateTaskAssignmentAsync" />
+            </ModalFooter>
+        </Form>
+    </ModalContent>
+</Modal>

@@ -1,0 +1,96 @@
+﻿@page "/Common/TestRichEdit"
+
+@attribute [Authorize(CommonPermissions.TestCommons.Default)]
+@using HQSOFT.Common.Blazor.Pages.Component;
+@using HQSOFT.Common.Comments; 
+@using Microsoft.AspNetCore.SignalR.Client;
+@using Microsoft.Extensions.Configuration;
+@using Volo.Abp.Application.Dtos;
+@using global::HQSOFT.Common.Shared
+@using global::HQSOFT.Common.TestCommons
+@using global::HQSOFT.Common.Permissions
+@using global::HQSOFT.Common.Localization
+
+@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components
+@using Microsoft.Extensions.Localization
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Routing
+@using System.ComponentModel.DataAnnotations
+
+@using Blazorise.Components
+@using DevExpress.Blazor
+@using DevExpress.Blazor.Grid
+
+@using Volo.Abp.Http.Client
+@using Volo.Abp.BlazoriseUI
+@using Volo.Abp.ObjectMapping
+@using Volo.Abp.BlazoriseUI.Components
+@using Volo.Abp.AspNetCore.Components.Web
+@using Volo.Abp.AspNetCore.Components.Messages
+@using Volo.Abp.AspNetCore.Components.Web.Theming.Layout
+
+@inherits CommonComponentBase
+@inject IJSRuntime JSRuntime
+@inject IConfiguration Configuration
+@inject IUiMessageService TokenProvider
+@inject ITestCommonsAppService TestCommonsAppService
+@inject ICommentsAppService CommentsAppService
+@inject IUiMessageService UiMessageService
+@inject IRemoteServiceConfigurationProvider RemoteServiceConfigurationProvider
+@inject NavigationManager NavigationManager
+
+<Div>
+	<HQSOFTComment OnCommentAdded="HandleCommentAdded" DocId='@EditingTestCommonId' Url='/AccountReceivable/CustomerClasses' />
+</Div>
+<Div>
+	<HQSOFTFormActivity DocId='@EditingTestCommonId' Url='/AccountReceivable/CustomerClasses' @ref="@formActivity" />
+</Div>
+
+@code {
+
+	private Guid EditingTestCommonId { get; set; } = Guid.Parse("3a0f355a-c417-eff0-64bf-96d6c231b259"); //Editing TestCommon Id on grid
+	private bool commentButtonClicked = false;
+	private HQSOFTFormActivity formActivity;
+
+
+	private HubConnection _hubConnection;
+
+	protected override async Task OnInitializedAsync()
+	{
+		await GetConnectSignalR();
+	}
+	 
+	public async Task GetConnectSignalR()
+	{
+		// var tokenResult = await TokenProvider.RequestAccessToken();
+		// var apiURL = Configuration.GetValue<string>("SignalR:HistoryUrl");
+		// Console.WriteLine("Getting SignalR-Common from appsettings.json: " + apiURL);
+		// try
+		// {
+		// 	if (tokenResult.TryGetToken(out var token))
+		// 	{
+
+		// 		_hubConnection = new HubConnectionBuilder()
+		// 						.WithUrl($"{apiURL}", options =>
+		// 						{
+		// 							options.AccessTokenProvider = async () => await Task.FromResult(token.Value);
+		// 						}).Build();
+		// 		await _hubConnection.StartAsync();
+		// 		Console.WriteLine("SignalR-Common connected");
+		// 	}
+		// }
+		// catch (Exception ex)
+		// {
+		// 	Console.WriteLine("Error starting HubConnection: " + ex.Message);
+		// }
+	}
+
+
+	private async Task HandleCommentAdded()
+	{
+		await formActivity.GetCommentListAsync();
+	}
+}

@@ -1,0 +1,209 @@
+﻿@using System.IO
+
+@using Microsoft.JSInterop;
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+
+@using System.Text;
+@using System.Net.Http;
+@using System.Net.Http.Headers;
+@using Volo.Abp.Data
+@using Volo.Abp.Content
+@using Volo.Abp.Http.Client
+@using Volo.Abp.Application.Dtos
+@using Volo.Abp.AspNetCore.Components.Messages
+
+@using Volo.FileManagement.Files
+@using Volo.FileManagement.Directories
+@using Volo.FileManagement.Localization
+@using Volo.FileManagement.Authorization
+
+@inherits CommonComponentBase
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+@inject IRemoteServiceConfigurationProvider RemoteServiceConfigurationProvider
+
+@inject IFileDescriptorAppService FileDescriptorAppService
+@inject IDirectoryDescriptorAppService DirectoryDescriptorAppService
+
+@******************************************* List File Uploaded  ********************************************@
+@{
+	var maxFilesToShow = 5;
+	var fileCount = Math.Min(maxFilesToShow, uploadedFileIds.Count);
+
+	// Sort the files based on timestamp in descending order
+	var sortedFiles = uploadedFileIds.Zip(fileNames, (id, name) => new { FileId = id, FileName = name })
+										.OrderByDescending(file => file.FileId)
+										.Take(fileCount)
+										.ToList();
+}
+
+@if (fileCount > 0)
+{
+	foreach (var file in sortedFiles)
+	{
+		var fileId = file.FileId;
+		var fileName = file.FileName;
+		var directoryName = directoryNames[uploadedFileIds.IndexOf(fileId)];
+
+		<div class="table-responsive"
+			 style="width: 100%;
+                    min-height: fit-content !important;
+                    margin-top: 0.2rem;">
+			<Row Style="margin-right: 0; margin-left: -12px;">
+				<Column>
+					<table class="table">
+						<tbody>
+							<tr>
+								<td style="width: 10rem;">
+									<button style="text-align: left; font-size: small;" @onclick="() => OpenShowImageModalAsync(fileName)">
+										<i>@fileName</i>
+									</button>
+								</td>
+								<td style="width: 3rem;">
+									<button @onclick="() => DeleteFile(fileId)" style="width: 100%; font-size: small;">
+										<i class="fa fa-trash"></i>
+									</button>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</Column>
+			</Row>
+		</div>
+	}
+}
+else
+{
+	<p>No files found.</p>
+}
+@******************************************* Button Upload - Camera  ********************************************@
+
+@if (uploadedFileIds.Count < 5)
+{
+	<div style="padding: 0.5rem 0.1rem;">
+		<Button Clicked="OpenUploadModalAsync">Attachments File <Icon Name="IconName.PlusCircle"></Icon></Button>
+	</div>
+}
+
+
+@******************************************* Modal Upload  ********************************************@
+<Modal @ref="EditUploadModal" Closing="@EditUploadModal.CancelClosingModalWhenFocusLost">
+	<ModalContent Centered="true">
+		<Form id="EditImageForm">
+			<ModalHeader>
+				<ModalTitle>Upload file from</ModalTitle>
+				<CloseButton Clicked="CloseEditUploadModalAsync" Style="font-size: medium;" />
+			</ModalHeader>
+			<ModalBody>
+				<Row Style="margin-right: 0;
+							margin-left: 0;">
+					<Column ColumnSize="ColumnSize.Is6" Style="padding: 1.3rem;">
+						<div style="padding: 0.5rem 0.1rem;">
+							<InputFile class="custom-input-file" OnChange="@OnFileSelection"></InputFile>
+						</div>
+					</Column>
+					<Column ColumnSize="ColumnSize.Is6" Style="padding: 1.3rem;">
+						<Button Class="button-camera" Clicked="OpenCameraModalAsync">Camera <Icon Name="IconName.Camera"></Icon></Button>
+					</Column>
+				</Row>
+			</ModalBody>
+		</Form>
+	</ModalContent>
+</Modal>
+
+
+
+@******************************************* Modal Camera ********************************************@
+<Modal @ref="EditCameraModal" Closing="@EditCameraModal.CancelClosingModalWhenFocusLost" ScrollToTop="false">
+	<ModalContent Centered="true">
+		<Form id="EditImageForm">
+			<ModalHeader>
+				<ModalTitle>@nameFile</ModalTitle>
+				<CloseButton Clicked="CloseEditCameraModalAsync" Style="font-size: medium;" />
+			</ModalHeader>
+			<ModalBody>
+				<Column Style="padding: 1.3rem;">
+					<HQSOFTCamera Capture="Capture"></HQSOFTCamera>
+					<Text TextAlignment="TextAlignment.Center">Total: @cameraList.Count() </Text>
+				</Column>
+				<Column>
+					<div id="results">
+						<Button Size="Size.Medium" Color="Color.Danger" @onclick="ClearImage">Clear</Button>
+						@if (cameraList.Count > 0)
+						{
+							@foreach (var item in cameraList)
+							{
+								<img src="@item" alt="Alternate Text" width="30" height="30" 
+									style="padding: 2px; width: fit-content;" />
+							}
+						}
+					</div>
+				</Column>
+				<Column>
+					<p>Status Camera: @GetCameraState()</p>
+					<Button Size="Size.Medium" Color="Color.Warning" @onclick="SwitchCamera">Switch Camera</Button>
+					@* <Button Size="Size.Medium" Color="Color.Secondary">Preview</Button> *@
+					<Button Size="Size.Medium" Color="Color.Success" @onclick="Capture">Take Photo</Button>
+					<Button Size="Size.Medium" Color="Color.Primary" @onclick="SaveToDatabase">Save & Submit</Button>
+				</Column>
+			</ModalBody>
+		</Form>
+	</ModalContent>
+</Modal>
+
+
+
+@******************************************* Modal show image  ********************************************@
+<Modal @ref="EditImageModal" Closing="@EditImageModal.CancelClosingModalWhenFocusLost">
+	<ModalContent Centered="true">
+		<Form id="EditImageForm">
+			<ModalHeader>
+				<ModalTitle>@nameFile</ModalTitle>
+				<CloseButton Clicked="CloseEditImageModalAsync" Style="font-size: medium;" />
+			</ModalHeader>
+			<ModalBody>
+				<Column Style="padding: 1.3rem;">
+					@if (IsImageFile(fileExtension))
+					{
+						if (!string.IsNullOrEmpty(base64Image))
+						{
+							<CardImage Class="zoom" Source="@($"data:{fileType};base64,{base64Image}")" Style="height:revert-layer"></CardImage>
+							@*
+					<HQSOFTImageZoom ImageUrlPath="@($"data:{fileType};base64,{base64Image}")"
+					ImageWidthInPx=400
+					ImageHeightInPx=300
+					ShowResetButton=true
+					DefaultScaleBy=0.1f /> *@
+						}
+					}
+					else if (fileExtension == ".txt")
+					{
+						if (!string.IsNullOrEmpty(base64Txt))
+						{
+							string base64Content = "data:text/plain;base64," + base64Image;
+							string decodedContent = string.Empty;
+
+							if (base64Content.Contains(","))
+							{
+								var base64Parts = base64Content.Split(',');
+								if (base64Parts.Length == 2)
+								{
+									decodedContent = Encoding.UTF8.GetString(Convert.FromBase64String(base64Parts[1])); // Giải mã chuỗi Base64
+								}
+							}
+							<CardText Style="height:revert-layer">@decodedContent</CardText>
+						}
+					}
+					else
+					{
+						<CardText Style="height:revert-layer">Please download it to see.</CardText>
+						<Button Clicked="(()=>DownloadFile(nameFile))">Download</Button>
+					}
+				</Column>
+			</ModalBody>
+		</Form>
+	</ModalContent>
+</Modal>
+<SnackbarStack @ref="snackbarStack" Location="SnackbarStackLocation.BottomEnd" />

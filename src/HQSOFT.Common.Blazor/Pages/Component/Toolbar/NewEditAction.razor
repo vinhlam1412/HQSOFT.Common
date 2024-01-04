@@ -1,0 +1,54 @@
+﻿@using Microsoft.AspNetCore.Authorization
+@using Volo.Abp.Http.Client
+
+@inherits CommonComponentBase
+@inject IRemoteServiceConfigurationProvider RemoteServiceConfigurationProvider 
+
+<Dropdown>
+    <DropdownToggle Color="Color.Primary" ToggleIconVisible="false">
+        <Icon Name="IconName.MoreHorizontal"> </Icon>
+    </DropdownToggle>
+    <DropdownMenu>
+        <DropdownItem Clicked="RefreshData">@L["Refresh"]</DropdownItem>
+        @if (!CanCreate)
+        {
+            <DropdownItem Clicked="New">@L["New"]</DropdownItem> 
+        }
+        @if (!CanEdit && Id != Guid.Empty)
+        { 
+            <DropdownItem Clicked="Duplicate">@L["Duplicate"]</DropdownItem>
+        }
+        @if (!CanDelete && Id != Guid.Empty)
+        {
+            <DropdownItem Clicked="Delete">@L["Delete"]</DropdownItem>
+        }
+
+    </DropdownMenu>
+</Dropdown>
+
+@code {
+
+    [Parameter]
+    public Guid Id { get; set; }
+
+    [Parameter]
+    public EventCallback RefreshData { get; set; }
+
+    [Parameter]
+    public EventCallback New { get; set; }
+
+    [Parameter]
+    public EventCallback Delete { get; set; }
+
+    [Parameter]
+    public EventCallback Duplicate { get; set; }  
+
+    [Parameter]
+    public bool CanCreate { get; set; }
+    
+    [Parameter]
+    public bool CanEdit { get; set; }
+
+    [Parameter]
+    public bool CanDelete { get; set; }
+}

@@ -1,0 +1,95 @@
+@page
+@using Microsoft.AspNetCore.Authorization
+@using Volo.Abp.AspNetCore.Mvc.UI.Layout
+@using HQSOFT.Common.Permissions
+@using HQSOFT.Common.Web.Pages.Common.Comments
+@using HQSOFT.Common.Web.Menus
+@using Microsoft.AspNetCore.Mvc.Localization
+@using HQSOFT.Common.Localization
+@inject IHtmlLocalizer<CommonResource> L
+@inject IAuthorizationService Authorization
+@model IndexModel
+@inject IPageLayout PageLayout
+@{
+    PageLayout.Content.Title = L["Comments"].Value;
+    PageLayout.Content.MenuItemName = CommonMenus.Comments;
+}
+
+@section styles
+{
+@*//<suite-custom-code-block-1>*@
+@*//</suite-custom-code-block-1>*@
+}
+
+@section scripts
+{
+    <abp-script src="/Pages/Common/Comments/index.js" />
+@*//<suite-custom-code-block-2>*@
+@*//</suite-custom-code-block-2>*@
+}
+
+@section content_toolbar {
+    <abp-button id="ExportToExcelButton" text="@L["ExportToExcel"].Value" icon="download" size="Small" button-type="Primary" />
+    @if (await Authorization.IsGrantedAsync(CommonPermissions.Comments.Create))
+    {
+        <abp-button id="NewCommentButton" text="@L["NewComment"].Value" icon="plus" size="Small" button-type="Primary" />
+    }
+@*//<suite-custom-code-block-3>*@
+@*//</suite-custom-code-block-3>*@
+}
+
+@*//<suite-custom-code-block-4>*@
+@*//</suite-custom-code-block-4>*@
+
+<abp-card>
+    <abp-card-body>
+		<abp-row class="mb-3">
+            <abp-column size-md="_12">
+                <form id="SearchForm" autocomplete="off">
+                    <div class="input-group">
+                        <input class="form-control page-search-filter-text" id="FilterText" placeholder="@L["Search"]"/>
+                        <abp-button button-type="Primary" type="submit" icon="search"/>
+                    </div>
+                </form>
+            </abp-column>
+            <abp-column size-md="_12" class="mt-3">
+                <a href="javascript:;" id="AdvancedFilterSectionToggler" class="text-decoration-none">@L["SeeAdvancedFilters"]</a>
+            </abp-column>
+        </abp-row>
+
+        <abp-row id="AdvancedFilterSection" style="display: none;">
+            <abp-column size="_3">
+                <abp-input asp-for="FromUserIdFilter" label="@L["FromUserId"].Value" />
+            </abp-column>
+            <abp-column size="_3">
+                <abp-input asp-for="ContentFilter" label="@L["Content"].Value" />
+            </abp-column>
+            <abp-column size="_3">
+                <abp-input asp-for="DocIdFilter" label="@L["DocId"].Value" />
+            </abp-column>
+            <abp-column size="_3">
+                <abp-input asp-for="UrlFilter" label="@L["Url"].Value" />
+            </abp-column>
+@*//<suite-custom-code-block-5>*@
+@*//</suite-custom-code-block-5>*@
+        </abp-row>
+
+        <abp-table striped-rows="true" id="CommentsTable">
+            <thead>
+				<tr>
+					<th>@L["Actions"]</th>
+					<th>@L["FromUserId"]</th>
+					<th>@L["Content"]</th>
+					<th>@L["DocId"]</th>
+					<th>@L["Url"]</th>
+
+@*//<suite-custom-code-block-6>*@
+@*//</suite-custom-code-block-6>*@
+				</tr>
+            </thead>
+        </abp-table>
+    </abp-card-body>
+</abp-card>
+
+@*//<suite-custom-code-block-7>*@
+@*//</suite-custom-code-block-7>*@

@@ -1,0 +1,108 @@
+﻿@rendermode InteractiveServer
+
+@attribute [Authorize(CommonPermissions.TaskAssignments.Default)]
+@attribute [Authorize(CommonPermissions.ShareWiths.Default)]
+@attribute [Authorize(CommonPermissions.Notifications.Default)]
+@attribute [Authorize(IdentityPermissions.Users.Default)]
+
+@using Blazorise.Components;
+@using DevExpress.Blazor;
+
+@using Microsoft.AspNetCore.Components.Authorization;
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
+@using Microsoft.AspNetCore.Http
+@using Microsoft.Extensions.Configuration;
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.Extensions.Localization
+@using Microsoft.AspNetCore.Components.Web
+
+@using Volo.Abp.AspNetCore.Components.Messages;
+@using Volo.Abp.BlazoriseUI.Components
+@using Volo.Abp.MultiTenancy;
+@using Volo.Abp.Identity;
+
+@using Volo.Abp.SettingManagement;
+@using global::HQSOFT.Common.TaskAssignments
+@using global::HQSOFT.Common.Localization
+@using global::HQSOFT.Common.Shared
+@using global::HQSOFT.Common.Permissions
+@using global::HQSOFT.Common.Notifications;
+@using global::HQSOFT.Common.ShareWiths
+
+
+@inherits CommonComponentBase
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ICurrentTenant CurrentTenant
+@inject IConfiguration Configuration
+@inject IUiMessageService UiMessageService
+@inject IIdentityUserAppService IdentityUserAppService
+@inject IIdentityUserLookupAppService IdentityUserLookupAppService
+@inject IShareWithsAppService ShareWithsAppService
+@inject ITaskAssignmentsAppService TaskAssignmentsAppService
+@inject IEmailSettingsAppService EmailSettingsAppService
+@inject INotificationsAppService NotificationsAppService
+@inject IHttpContextAccessor HttpContextAccessor
+
+<Div Style="padding-top:10px;padding-bottom:10px;">
+
+	<Icon Name="IconName.UserPlus" />
+	<Text>@L["Assign"]</Text>
+		<Button Size="Blazorise.Size.Small" Clicked="OpenTaskAssigmenentModalAsync">
+			<Icon Name="IconName.PlusCircle" IconSize="IconSize.Large" TextColor="TextColor.Primary" />
+		</Button>
+		<DxTagBox ReadOnly="true"
+				  Data="@AssignedUserList"
+				  @bind-Values="@SelectedUsers">
+			<TagTemplate Context="tagInfo">
+				<div>
+					<img src="@(authServerUrl + "/api/account/profile-picture-file/" + tagInfo.DataItem.Id.ToString())" width="21" />
+					@tagInfo.DataItem.Name
+			</div>
+		</TagTemplate>
+	</DxTagBox>
+</Div>
+
+<Div Style="padding-top:1rem;">
+	<Icon Name="IconName.Paperclip" />
+	<Text>@L["Attachments"]</Text>
+		<HQSOFTAttachments DirectoryName="Attachments" DocId="@DocId" DocUrl="@Url"></HQSOFTAttachments>
+	</Div>
+
+	<Div Style="padding-top:10px;padding-bottom:10px;">
+		<Icon Name="IconName.Share" />
+		<Text>@L["Share"]</Text>
+		<Button Size="Blazorise.Size.Small" Clicked="OpenSharingModalAsync">
+			<Icon Name="IconName.PlusCircle" IconSize="IconSize.Large" TextColor="TextColor.Primary" />
+		</Button>
+		<DxTagBox ReadOnly="true"
+				  Data="@SharedUserList"
+				  @bind-Values="@SharedUsers">
+			<TagTemplate Context="tagInfo">
+				<div>
+					<img src="@(authServerUrl + "/api/account/profile-picture-file/" + tagInfo.DataItem.Id.ToString())" width="21" />
+					@tagInfo.DataItem.Name
+			</div>
+		</TagTemplate>
+	</DxTagBox>
+
+</Div>
+
+@* ************************* EDIT MODAL TASK ASSIGNMENT ************************* *@
+
+<DxPopup @ref="EditAssignedToModal"
+		 HeaderText="@L["Assignment"]">
+	<BodyContentTemplate>
+		<AssignmentForm OnTaskAssignmentAdding="AddTaskAssigmentAsync" AssignedUsers="@SelectedUsers" AuthServerUrl="@authServerUrl" />
+	</BodyContentTemplate>
+</DxPopup>
+
+
+<DxPopup @ref="EditSharingModal"
+		 Width="600px"
+		 HeaderText="@L["Sharing"]">
+	<BodyContentTemplate>
+		<SharingForm OnShareWithAdding="AddShareWithAsync" OnShareWithDeleting="DeleteShareWithAsync" EditingShareWithList="@ShareWithList" AuthServerUrl="@authServerUrl" DocId="@DocId" Url="@Url" />
+	</BodyContentTemplate>
+</DxPopup>

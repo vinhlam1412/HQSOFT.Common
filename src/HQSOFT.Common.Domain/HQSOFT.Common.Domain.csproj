@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\common.props" />
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.1;net8.0</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <RootNamespace>HQSOFT.Common</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Volo.Abp.Ddd.Domain" Version="8.0.0" />
+    <PackageReference Include="Volo.Abp.Caching" Version="8.0.0" />
+	  <PackageReference Include="Volo.Abp.AuditLogging.Domain" Version="8.0.0" />
+	  <PackageReference Include="Volo.FileManagement.Domain" Version="8.0.0" />
+	  <PackageReference Include="Volo.Abp.SettingManagement.Domain" Version="8.0.0" />
+    <ProjectReference Include="..\HQSOFT.Common.Domain.Shared\HQSOFT.Common.Domain.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

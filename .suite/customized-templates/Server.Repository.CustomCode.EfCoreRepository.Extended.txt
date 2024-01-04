@@ -1,0 +1,22 @@
+##FA28F303FA8DEBC3E2882CF4C867B67F##
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Dynamic.Core;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Volo.Abp.Domain.Repositories.EntityFrameworkCore;
+using Volo.Abp.EntityFrameworkCore;
+using %%solution-namespace%%.EntityFrameworkCore;
+
+namespace %%solution-namespace%%.%%entity-namespace%%
+{
+    public class EfCore%%entity-name%%Repository : EfCore%%entity-name%%RepositoryBase, I%%entity-name%%Repository
+    {
+        public EfCore%%entity-name%%Repository(IDbContextProvider<%%only-project-name%%DbContext> dbContextProvider)
+            : base(dbContextProvider)
+        {
+        }
+    }
+}

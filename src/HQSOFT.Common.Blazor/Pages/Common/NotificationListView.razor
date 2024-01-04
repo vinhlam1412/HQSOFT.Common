@@ -1,0 +1,195 @@
+@page "/Common/Notifications"
+
+@attribute [Authorize(CommonPermissions.Notifications.Default)]
+@using global::HQSOFT.Common.Blazor.Pages.Component.Toolbar
+@using global::HQSOFT.Common.Blazor.Pages.Component
+@using global::HQSOFT.Common.Localization
+@using global::HQSOFT.Common.Permissions
+@using global::HQSOFT.Common.Notifications
+@using global::HQSOFT.Common.Shared
+
+@using Microsoft.AspNetCore.Components
+@using Microsoft.Extensions.Localization
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Web
+
+@using Blazorise
+@using Blazorise.Components
+@using Blazorise.DataGrid
+
+@using Volo.Abp.Http.Client
+@using Volo.Abp.BlazoriseUI
+@using Volo.Abp.ObjectMapping
+@using Volo.Abp.BlazoriseUI.Components
+@using Volo.Abp.AspNetCore.Components.Web
+@using Volo.Abp.AspNetCore.Components.Messages
+@using Volo.Abp.AspNetCore.Components.Web.Theming.Layout
+
+@inherits CommonComponentBase
+@inject IUiMessageService UiMessageService
+@inject INotificationsAppService NotificationsAppService
+@inject IRemoteServiceConfigurationProvider RemoteServiceConfigurationProvider
+@inject ShowActionListView ShowActionListView
+@inject NavigationManager NavigationManager
+
+@* ************************* PAGE HEADER ************************* *@
+<PageHeader Title="@L["Notifications"]" BreadcrumbItems="BreadcrumbItems" Toolbar="Toolbar">
+
+</PageHeader>
+
+@* ************************* SEARCH ************************* *@
+<Card>
+	<CardBody>
+		<div style="display: @(!ShowAdvancedFilters ? "none" : "block")">
+			<Row>
+				<Column ColumnSize="ColumnSize.Is3">
+					<Field>
+						<FieldLabel>@L["Title"]</FieldLabel>
+						<TextEdit @bind-Text="@Filter.NotiTitle" />
+					</Field>
+				</Column><Column ColumnSize="ColumnSize.Is3">
+					<Field>
+						<FieldLabel>@L["Type"]</FieldLabel>
+						<Select TValue="NotificationsType?" @bind-SelectedValue="@Filter.Type">
+							@foreach (var item in NotificationsTypeList)
+							{
+								<SelectItem TValue="string" Value="@item.Value">
+									@item.DisplayName
+								</SelectItem>
+							}
+						</Select>
+					</Field>
+				</Column>
+			</Row>
+		</div>
+
+		<Form id="NotificationSearchForm" class="mb-3">
+			<Addons>
+				<Addon AddonType="AddonType.Body">
+					<TextEdit @bind-Text="@Filter.FilterText"
+							  Autofocus="true"
+							  Placeholder="@L["Search"]">
+					</TextEdit>
+				</Addon>
+				<Addon AddonType="AddonType.End">
+					<SubmitButton Form="NotificationSearchForm" Clicked="(()=> GetClassDataAsync(false))">
+						<Icon Name="IconName.Search" Class="me-1"></Icon>@L["Search"]
+					</SubmitButton>
+				</Addon>
+			</Addons>
+		</Form>
+
+		<Row Class="mt-3 mb-3">
+			<div class="col-md-12">
+				<a href="javascript:;" class="text-decoration-none" @onclick="() => ShowAdvancedFilters = !ShowAdvancedFilters">@L["SeeAdvancedFilters"]</a>
+			</div>
+		</Row>
+	</CardBody>
+</Card>
+
+@* ************************* DATA GRID ************************* *@
+<Card>
+	<CardBody>
+		<DataGrid TItem="NotificationDto"
+				  Data="NotificationList"
+				  ReadData="OnDataGridReadAsync"
+				  TotalItems="TotalCount"
+				  ShowPager="true"
+				  Responsive="true"
+				  PageSize="PageSize"
+					  ShowPageSizes
+					  PageSizeChanged="ChangePageSize"
+					  SortMode="DataGridSortMode.Single"
+					  SelectedRows="SelectedNotifications"
+					  SelectionMode="Blazorise.DataGrid.DataGridSelectionMode.Multiple"
+					  SelectedRowsChanged="@((List<NotificationDto> e) => SelectedChangeRow(e))">
+				<DataGridColumns>
+
+					<DataGridMultiSelectColumn TItem="NotificationDto"></DataGridMultiSelectColumn>
+					<DataGridCommandColumn TItem="NotificationDto" />
+
+					<DataGridColumn TItem="NotificationDto"
+									Field="Id"
+									Filterable="false"
+									Sortable="false"
+									Caption="#"
+									Width="10px">
+						<DisplayTemplate>
+							@{
+							@(NotificationList.ToList().IndexOf(context) + 1)
+						}
+					</DisplayTemplate>
+				</DataGridColumn>
+
+				<DataGridColumn TItem="NotificationDto"
+								Field="NotiTitle"
+								Width="25rem"
+								Caption="@L["Subject"]">
+					<DisplayTemplate>
+						@{
+							string truncatedCode = TruncateText((context as NotificationDto).NotiTitle, 20);
+
+							if (context.NotiTitle.Length >= 20)
+							{
+								<Tooltip Fade="true" Multiline="true" Text="@context.NotiTitle" TriggerTargetId="tooltip-custom-target" Inline>
+									<a class="d-block text-left" href="@($"{context.Url}/{context.DocId}")" @onclick="() => GoToEditPage(context as NotificationDto,context as NotificationDto)">@truncatedCode</a>
+								</Tooltip>
+							}
+							else
+							{
+								<a class="d-block text-left" href="@($"{context.Url}/{context.DocId}")" @onclick="() => GoToEditPage(context as NotificationDto,context as NotificationDto)">@truncatedCode</a> 
+							}
+						}
+					</DisplayTemplate>
+				</DataGridColumn>
+
+				<DataGridColumn TItem="NotificationDto"
+								Field="Type"
+								Width="25rem"
+								Caption="@L["Type"]">
+					<DisplayTemplate>
+						@if (context.Type != null)
+						{
+							<Badge Color="Color.Secondary">
+								@L[$"{context.Type}"]
+							</Badge>
+						}
+					</DisplayTemplate>
+				</DataGridColumn>
+
+				<DataGridColumn TItem="NotificationDto"
+								Field="Id"
+								Width="20rem"
+								Caption="@L["ID"]">
+					<DisplayTemplate>
+						@{
+							string truncatedCode = TruncateTextId(context.Id.ToString(), 10);
+							@truncatedCode
+						}
+					</DisplayTemplate>
+				</DataGridColumn>
+
+
+				<DataGridColumn TItem="NotificationDto"
+								Field="CreationTime"
+								Width="5rem"
+								Caption="@L[""]">
+					<DisplayTemplate>
+						-
+					</DisplayTemplate>
+				</DataGridColumn>
+
+				<DataGridColumn TItem="NotificationDto"
+								Field="CreationTime"
+								Width="10rem"
+								Caption="@L[""]">
+					<DisplayTemplate>
+						<span style="font-size: 14px;color: #646d79;">@GetTimeAgo(context.CreationTime)</span>
+					</DisplayTemplate>
+				</DataGridColumn>
+
+
+			</DataGridColumns>
+		</DataGrid>
+	</CardBody>
+</Card> 

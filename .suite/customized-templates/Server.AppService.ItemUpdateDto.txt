@@ -1,0 +1,18 @@
+##882B2EEB7089803630ACA240B589A864##
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.Collections.Generic;
+using Volo.Abp.Application.Dtos;
+%%<if:CheckConcurrency>%%using Volo.Abp.Domain.Entities;%%</if:CheckConcurrency>%%
+
+namespace %%solution-namespace%%%%<if:ApplicationContractsNotExists>%%%%.AppServices%%</if:ApplicationContractsNotExists>%%.%%entity-namespace%%
+{
+    public %%custom-code-abstract-modifier%% class %%entity-name%%UpdateDto%%custom-code-base%% : AuditedEntityDto<%%primary-key%%>%%<if:CheckConcurrency>%%, IHasConcurrencyStamp%%</if:CheckConcurrency>%%
+    {
+        %%item-dto-properties%%%%item-dto-np-properties%%%%item-dto-nc-properties%%
+        
+        %%<if:CheckConcurrency>%%public string ConcurrencyStamp { get; set; } = null!;%%</if:CheckConcurrency>%%
+
+       public bool IsChanged { get; set; }
+    }
+}

@@ -1,0 +1,118 @@
+﻿@attribute [Authorize(CommonPermissions.TaskAssignments.Default)]
+@attribute [Authorize(IdentityPermissions.Users.Default)]
+
+@using Blazorise.Components;
+@using DevExpress.Blazor;
+
+@using Microsoft.AspNetCore.Components.Authorization;
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.Extensions.Configuration;
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.Extensions.Localization
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.JSInterop
+
+@using Volo.Abp.AspNetCore.Components.Messages;
+@using Volo.Abp.BlazoriseUI.Components
+@using Volo.Abp.MultiTenancy;
+@using Volo.Abp.Identity;
+
+@using global::HQSOFT.Common.Localization
+@using global::HQSOFT.Common.Shared
+@using global::HQSOFT.Common.Permissions
+@using global::HQSOFT.Common.ShareWiths;
+@using global::HQSOFT.Common.Notifications;
+
+
+@inject IJSRuntime JSRuntime
+@inherits CommonComponentBase
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ICurrentTenant CurrentTenant
+@inject IConfiguration Configuration
+@inject IUiMessageService UiMessageService
+@inject IIdentityUserAppService IdentityUserAppService
+@inject IShareWithsAppService ShareWithsAppService
+@inject INotificationsAppService NotificationsAppService
+
+@* ************************* EDIT MODAL TASK ASSIGNMENT ************************* *@
+
+<div class="d-flex flex-fill pt-1 pb-2 w-100">
+    <Card>
+        <CardBody>
+            <Blazorise.Row>
+                <DxGrid @ref="GridShareWith"
+                        Data="@EditingShareWithList"
+                        @bind-SelectedDataItems="@SelectedShareWiths"
+                        SelectionMode="GridSelectionMode.Multiple"
+                        AllowSelectRowByClick="true"
+                        EditMode="GridEditMode.EditRow"
+                        EditNewRowPosition="GridEditNewRowPosition.Bottom"
+                        PageSize="@PageSize"
+                        PagerPosition="GridPagerPosition.Top"
+                        PageSizeSelectorVisible="true"
+                        PageSizeSelectorItems="@(new int[] { 10, 20, 100, 500 })"
+                        PageSizeSelectorAllRowsItemVisible="true"
+                        PagerSwitchToInputBoxButtonCount="@PageSize"
+                        PagerVisibleNumericButtonCount="@PageSize"
+                        PagerNavigationMode="PagerNavigationMode.InputBox"
+                        FocusedRowEnabled="true"
+                        RowClick="GridShareWith_OnRowClick"
+                        RowDoubleClick="GridShareWith_OnRowDoubleClick"
+                        FocusedRowChanged="GridShareWith_OnFocusedRowChanged"
+                        EditModelSaving="GridShareWith_EditModelSaving"
+                        EditorRenderMode="GridEditorRenderMode.Integrated"
+                        KeyboardNavigationEnabled="true" @onkeydown="GridShareWith_OnKeyDown">
+                    <Columns>
+                        <DxGridSelectionColumn Width="5px" />
+                        <DxGridDataColumn Name="SharedToUserId" FieldName="SharedToUserId" Width="150px" Caption="@L["User"]">
+                            <EditSettings>
+                                <DxComboBoxSettings Data="@UserList"
+                                                    TextFieldName="Name"
+                                                    ValueFieldName="Id"
+                                                    FilteringMode="DataGridFilteringMode.Contains"                                    
+                                                    DisplayFormat="{0}"
+                                                    EditFormat="{0} {1}"
+                                                    InputCssClass="focus-value"
+                                                    ShowValidationIcon="true">
+                                    <Columns>
+                                        <DxListEditorColumn FieldName="Name"
+                                                            Caption="@L["Name"]" />
+                                        <DxListEditorColumn FieldName="Email"
+                                                            Caption="@L["Email"]" />
+                                    </Columns>
+                                </DxComboBoxSettings>
+                            </EditSettings>
+                        </DxGridDataColumn>
+                        <DxGridDataColumn Name="CanRead" FieldName="CanRead" Caption="@L["CanRead"]">
+                        </DxGridDataColumn>
+                        <DxGridDataColumn Name="CanWrite" FieldName="CanWrite" Caption="@L["CanWrite"]">
+                        </DxGridDataColumn>
+                        <DxGridDataColumn Name="CanSubmit" FieldName="CanSubmit" Caption="@L["CanSubmit"]">
+                        </DxGridDataColumn>
+                        <DxGridDataColumn Name="CanShare" FieldName="CanShare" Caption="@L["CanShare"]">
+                        </DxGridDataColumn>
+                    </Columns>
+                </DxGrid>
+                <Div class="mt-1 bt-1">
+                    <Button Clicked="BtnAdd_GridShareWith_OnClick" Size="Blazorise.Size.Small">
+                        <Icon Name="IconName.Add" TextColor="TextColor.Primary" />
+                    </Button>
+                    <Button Clicked="GridShareWith.CancelEditAsync" Size="Blazorise.Size.Small">
+                        <Icon Name="IconName.Undo" TextColor="TextColor.Secondary" />
+                    </Button>
+                    <Button Clicked="BtnDelete_GridShareWith_OnClick" Size="Blazorise.Size.Small">
+                        <Icon Name="IconName.Delete" TextColor="TextColor.Danger" />
+                    </Button>
+                </Div>
+            </Blazorise.Row>
+        </CardBody>
+    </Card>
+
+</div>
+<div align = "right">
+    <Button Color="Blazorise.Color.Primary"
+            Clicked="AddSharing_Click">
+        @L["Add"]
+    </Button>
+</div>

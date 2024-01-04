@@ -1,0 +1,302 @@
+<abp-page [title]="title | abpLocalization">
+  <abp-page-toolbar-container class="col">
+    <!--<suite-custom-code-block-0>-->
+    <!--</suite-custom-code-block-0>-->
+    <div class="text-lg-end pt-2">
+      <!--<suite-custom-code-block-1>-->
+      <!--</suite-custom-code-block-1>-->
+
+      <button
+        *abpPermission="'Common.Notifications.Create'"
+        class="btn btn-primary btn-sm"
+        type="button"
+        (click)="create()"
+      >
+        <i class="fa fa-plus me-1" aria-hidden="true"></i>
+        {{ 'Common::NewNotification' | abpLocalization }}
+      </button>
+      <!--<suite-custom-code-block-2>-->
+      <!--</suite-custom-code-block-2>-->
+    </div>
+  </abp-page-toolbar-container>
+
+  <abp-advanced-entity-filters localizationSourceName="Common" [list]="list">
+    <abp-advanced-entity-filters-form *ngIf="service.filters as filters">
+      <form #filterForm (keyup.enter)="list.get()">
+        <!--<suite-custom-code-block-3>-->
+        <!--</suite-custom-code-block-3>-->
+        <div class="row">
+          <div class="col-12 col-sm-auto">
+            <div class="mb-3">
+              <label class="form-label" for="fromUserIdFilter">
+                {{ 'Common::FromUserId' | abpLocalization }}
+              </label>
+
+              <input
+                id="fromUserIdFilter"
+                class="form-control"
+                [(ngModel)]="filters.fromUserId"
+                [ngModelOptions]="{ standalone: true }"
+              />
+            </div>
+          </div>
+          <div class="col-12 col-sm-auto">
+            <div class="mb-3">
+              <label class="form-label" for="toUserIdFilter">
+                {{ 'Common::ToUserId' | abpLocalization }}
+              </label>
+
+              <input
+                id="toUserIdFilter"
+                class="form-control"
+                [(ngModel)]="filters.toUserId"
+                [ngModelOptions]="{ standalone: true }"
+              />
+            </div>
+          </div>
+          <div class="col-12 col-sm-auto">
+            <div class="mb-3">
+              <label class="form-label" for="notiTitleFilter">
+                {{ 'Common::NotiTitle' | abpLocalization }}
+              </label>
+
+              <input
+                id="notiTitleFilter"
+                class="form-control"
+                [(ngModel)]="filters.notiTitle"
+                [ngModelOptions]="{ standalone: true }"
+              />
+            </div>
+          </div>
+          <div class="col-12 col-sm-auto">
+            <div class="mb-3">
+              <label class="form-label" for="notiBodyFilter">
+                {{ 'Common::NotiBody' | abpLocalization }}
+              </label>
+
+              <input
+                id="notiBodyFilter"
+                class="form-control"
+                [(ngModel)]="filters.notiBody"
+                [ngModelOptions]="{ standalone: true }"
+              />
+            </div>
+          </div>
+          <div class="col-12 col-sm-auto">
+            <div class="mb-3">
+              <label class="form-label" for="isReadFilter">
+                {{ 'Common::IsRead' | abpLocalization }}
+              </label>
+
+              <select
+                name="isRead"
+                id="isReadFilter"
+                class="form-select form-control"
+                [(ngModel)]="filters.isRead"
+                [ngModelOptions]="{ standalone: true }"
+                (change)="list.get()"
+              >
+                <option [ngValue]=""></option>
+                <option [ngValue]="true">{{ 'AbpUi::Yes' | abpLocalization }}</option>
+                <option [ngValue]="false">{{ 'AbpUi::No' | abpLocalization }}</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-12 col-sm-auto">
+            <div class="mb-3">
+              <label class="form-label" for="docIdFilter">
+                {{ 'Common::DocId' | abpLocalization }}
+              </label>
+
+              <input
+                id="docIdFilter"
+                class="form-control"
+                [(ngModel)]="filters.docId"
+                [ngModelOptions]="{ standalone: true }"
+              />
+            </div>
+          </div>
+          <div class="col-12 col-sm-auto">
+            <div class="mb-3">
+              <label class="form-label" for="urlFilter">
+                {{ 'Common::Url' | abpLocalization }}
+              </label>
+
+              <input
+                id="urlFilter"
+                class="form-control"
+                [(ngModel)]="filters.url"
+                [ngModelOptions]="{ standalone: true }"
+              />
+            </div>
+          </div>
+          <div class="col-12 col-sm-auto">
+            <div class="mb-3">
+              <label class="form-label" for="typeFilter">
+                {{ 'Common::Type' | abpLocalization }}
+              </label>
+
+              <select
+                id="typeFilter"
+                class="form-select form-control"
+                [(ngModel)]="filters.type"
+                [ngModelOptions]="{ standalone: true }"
+              >
+                <option [ngValue]="null"></option>
+                <option
+                  *ngFor="let option of notificationsTypeOptions; trackBy: track.by('value')"
+                  [ngValue]="option.value"
+                >
+                  {{ 'Common::Enum:NotificationsType.' + option.value | abpLocalization }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <div class="col-12 col-sm-auto align-self-end mb-3">
+            <div class="row">
+              <div class="col-6 col-sm-auto d-grid">
+                <button type="button" class="btn btn-outline-primary" (click)="clearFilters()">
+                  <span>{{ 'AbpUi::Clear' | abpLocalization }}</span>
+                </button>
+              </div>
+              <div class="col-6 col-sm-auto d-grid">
+                <button type="button" class="btn btn-primary" (click)="list.get()">
+                  <span>{{ 'AbpUi::Refresh' | abpLocalization }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!--<suite-custom-code-block-4>-->
+        <!--</suite-custom-code-block-4>-->
+      </form>
+    </abp-advanced-entity-filters-form>
+  </abp-advanced-entity-filters>
+  <!--<suite-custom-code-block-5>-->
+  <!--</suite-custom-code-block-5>-->
+  <div class="card">
+    <!--<suite-custom-code-block-6>-->
+    <!--</suite-custom-code-block-6>-->
+    <div class="card-body">
+      <!--<suite-custom-code-block-7>-->
+      <!--</suite-custom-code-block-7>-->
+      <ngx-datatable
+        [rows]="service.data.items"
+        [count]="service.data.totalCount"
+        [list]="list"
+        default
+      >
+        <!--<suite-custom-code-block-8>-->
+        <!--</suite-custom-code-block-8>-->
+        <ngx-datatable-column
+          [name]="'AbpUi::Actions' | abpLocalization"
+          [maxWidth]="150"
+          [width]="150"
+          [sortable]="false"
+        >
+          <ng-template let-row="row" let-i="rowIndex" ngx-datatable-cell-template>
+            <div ngbDropdown container="body" class="d-inline-block">
+              <button
+                class="btn btn-primary btn-sm dropdown-toggle"
+                data-toggle="dropdown"
+                aria-haspopup="true"
+                ngbDropdownToggle
+              >
+                <i class="fa fa-cog me-1" aria-hidden="true"></i>
+                {{ 'AbpUi::Actions' | abpLocalization }}
+              </button>
+
+              <div ngbDropdownMenu>
+                <button
+                  ngbDropdownItem
+                  *abpPermission="'Common.Notifications.Edit'"
+                  (click)="update(row)"
+                >
+                  {{ 'AbpUi::Edit' | abpLocalization }}
+                </button>
+
+                <button
+                  ngbDropdownItem
+                  *abpPermission="'Common.Notifications.Delete'"
+                  (click)="delete(row)"
+                >
+                  {{ 'AbpUi::Delete' | abpLocalization }}
+                </button>
+              </div>
+            </div>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{ 'Common::FromUserId' | abpLocalization }}" prop="fromUserId">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{ row.fromUserId }}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{ 'Common::ToUserId' | abpLocalization }}" prop="toUserId">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{ row.toUserId }}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{ 'Common::NotiTitle' | abpLocalization }}" prop="notiTitle">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{ row.notiTitle }}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{ 'Common::NotiBody' | abpLocalization }}" prop="notiBody">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{ row.notiBody }}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{ 'Common::IsRead' | abpLocalization }}" prop="isRead">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <ng-template [ngIf]="row.isRead" [ngIfThen]="yes" [ngIfElse]="no"></ng-template>
+
+            <ng-template #yes>
+              <div class="text-success">
+                <span [title]="'AbpUi::Yes' | abpLocalization">
+                  <i class="fa fa-check" aria-hidden="true"></i>
+                </span>
+              </div>
+            </ng-template>
+
+            <ng-template #no>
+              <div class="text-danger">
+                <span [title]="'AbpUi::No' | abpLocalization">
+                  <i class="fa fa-times" aria-hidden="true"></i>
+                </span>
+              </div>
+            </ng-template>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{ 'Common::DocId' | abpLocalization }}" prop="docId">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{ row.docId }}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{ 'Common::Url' | abpLocalization }}" prop="url">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{ row.url }}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{ 'Common::Type' | abpLocalization }}" prop="type">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{
+              row.type !== null
+                ? ('Common::Enum:NotificationsType.' + row.type | abpLocalization)
+                : ''
+            }}
+          </ng-template>
+        </ngx-datatable-column>
+        <!--<suite-custom-code-block-9>-->
+        <!--</suite-custom-code-block-9>-->
+      </ngx-datatable>
+      <!--<suite-custom-code-block-10>-->
+      <!--</suite-custom-code-block-10>-->
+    </div>
+  </div>
+  <!--<suite-custom-code-block-11>-->
+  <!--</suite-custom-code-block-11>-->
+</abp-page>
+<!--<suite-custom-code-block-12>-->
+<!--</suite-custom-code-block-12>-->
+<lib-notification-detail> </lib-notification-detail>

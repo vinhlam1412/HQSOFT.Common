@@ -1,0 +1,37 @@
+﻿@inject ChangeIconToggleSidebar ChangeIconToggleSidebar
+
+<Tooltip Text="Toggle Sidebar">
+    <Button Color="Color.Light" @onclick="ToggleInteractionFormAsync" @onmouseenter="OnMouseEnter" @onmouseleave="OnMouseLeave">
+
+        @if (ChangeIconToggleSidebar.IsChanged)
+        {
+            <Icon Name="@(ShowHoverIcon?IconName.ArrowRight:IconName.Bars)"></Icon>
+        }
+        else
+        {
+            <Icon Name="@(ShowHoverIcon?IconName.ArrowLeft:IconName.Bars)"></Icon>
+        }
+    </Button>
+</Tooltip>
+
+@code {
+    [Parameter]
+    public EventCallback ToggleInteractionFormAsync { get; set; }
+
+    private bool ShowHoverIcon { get; set; } = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ChangeIconToggleSidebar.IsChanged = true;
+    }
+
+    private void OnMouseEnter()
+    {
+        ShowHoverIcon = true;
+    }
+
+    private void OnMouseLeave()
+    {
+        ShowHoverIcon = false;
+    }
+}

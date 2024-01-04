@@ -1,0 +1,276 @@
+﻿@rendermode InteractiveServer
+
+@using Blazorise.Components;
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
+@using Microsoft.AspNetCore.Http
+@using MudBlazor;
+
+@using Microsoft.AspNetCore.Components.Authorization;
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.Extensions.Configuration;
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.Extensions.Localization
+@using Microsoft.AspNetCore.Components.Web
+
+@using System.Text.RegularExpressions;
+@using Volo.Abp.AspNetCore.Components.Messages;
+@using Volo.Abp.AuditLogging;
+@using Volo.Abp.BlazoriseUI.Components
+@using Volo.Abp.MultiTenancy;
+@using Volo.Abp.Identity;
+@using Volo.Abp.Data;
+@using Volo.Abp.Clients;
+
+@using Volo.Abp.SettingManagement;
+@using global::HQSOFT.Common.Comments
+@using global::HQSOFT.Common.Blazor.Pages.RichTextEdit
+@using global::HQSOFT.Common.Blazor.Pages.Common
+@using global::HQSOFT.Common.TaskAssignments
+@using global::HQSOFT.Common.Localization
+@using global::HQSOFT.Common.Shared
+@using global::HQSOFT.Common.Permissions
+
+@inherits CommonComponentBase
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ICommentsAppService CommentsAppService
+@inject ICurrentTenant CurrentTenant
+@inject IConfiguration Configuration
+@inject IUiMessageService UiMessageService
+@inject IIdentityUserAppService IdentityUserAppService
+@inject IIdentityUserLookupAppService IdentityUserLookupAppService
+@inject IAuditLogsAppService AuditLogsAppService
+@inject IEmailSettingsAppService EmailSettingsAppService
+@inject IHttpContextAccessor HttpContextAccessor
+
+
+<Card>
+	<DxTabs>
+		<DxTabPage Text="@L["Communication"]">
+			<MudTimeline TimelinePosition="TimelinePosition.Start" DisableModifiers="true" @key="commentsList">
+				@foreach (var history in commentsList)
+				{
+					if (history.DocId == DocId && history.Url == Url)
+					{
+						<MudTimelineItem Size="MudBlazor.Size.Medium" Color="MudBlazor.Color.Info" Variant="Variant.Outlined" Icon="@Icons.Material.Outlined.Chat" Elevation="true ? 0 : 25">
+
+							<ItemDot>
+								<MudAvatar Size="MudBlazor.Size.Medium" Image="@(authServerUrl + "/api/account/profile-picture-file/" + history.FromUserId.ToString())" />
+							</ItemDot>
+							<ItemContent>
+								<MudCard Outlined="true" Elevation="25">
+									@{
+										var FromUserID = UserList.Where(m => m.Id == history.FromUserId).FirstOrDefault();
+									}
+									<br />
+									<MudCardContent>
+										<MudCardHeader>
+											<CardHeaderContent>
+												@if (CurrentUser.Id == history.FromUserId)
+												{
+													<MudText Typo="Typo.subtitle1"><b>You commented</b> &emsp; @GetTimeAgo(history.CreationTime) </MudText>
+												}
+												else
+												{
+													<MudText Typo="Typo.subtitle1"><b>@FromUserID.Name commented</b> &emsp; @GetTimeAgo(history.CreationTime) </MudText>
+												}
+											</CardHeaderContent>
+											<CardHeaderActions>
+												@if (CurrentUser.Id == history.FromUserId)
+												{
+													@if (!IsEditing || editingCommentId != history.Id)
+													{
+														<MudIconButton Icon="@Icons.Material.Filled.EditNote"
+																	   Color="MudBlazor.Color.Default"
+																	   Size="MudBlazor.Size.Small"
+																	   Title="Edit" OnClick="() => SetIsEditing(history.Id)" />
+													}
+													else
+													{
+														<div>
+															<MudIconButton Icon="@Icons.Material.Filled.Save"
+																		   Color="MudBlazor.Color.Default"
+																		   Size="MudBlazor.Size.Small"
+																		   Title="Save" OnClick="() => SetIsNotEditing(history.Id)" />
+
+															<MudIconButton Icon="@Icons.Material.Filled.Cancel"
+																		   Color="MudBlazor.Color.Default"
+																		   Size="MudBlazor.Size.Small"
+																		   Title="Cancel" OnClick="() => CancelEditing(history.Id)" />
+														</div>
+													}
+												}
+											</CardHeaderActions>
+										</MudCardHeader>
+										@{
+											var mentionPattern = @"<span[^>]+data-link=""([^""]+)""[^>]*>(.*?)<\/span>";
+											var replacedContent = Regex.Replace(history.Content, mentionPattern, match =>
+											{
+												var link = match.Groups[1].Value;
+												var mention = match.Groups[2].Value;
+												return $"<a class=\"mention-comment\" href=\"mailto:{link}\" style=\"color: #000000;\">{mention}</a>";
+											});
+										}
+										@if (IsEditing && editingCommentId == history.Id && CurrentUser.Id == history.FromUserId)
+										{
+											<HQSOFTRichTextEdit @ref="richTextEditRef">
+												<Toolbar><ToolbarGroup /></Toolbar>
+												<Editor>@((MarkupString)replacedContent)</Editor>
+											</HQSOFTRichTextEdit>
+										}
+										else
+										{
+											<MudText Typo="Typo.body2">
+												@((MarkupString)replacedContent)
+											</MudText>
+										}
+									</MudCardContent>
+								</MudCard>
+							</ItemContent>
+						</MudTimelineItem>
+					}
+				}
+			</MudTimeline>
+		</DxTabPage>
+		<DxTabPage Text="@L["History"]">
+			<MudTimeline TimelinePosition="TimelinePosition.Start">
+				@foreach (var entityChange in entityChangesList.OrderByDescending(e => e.ChangeTime))
+				{
+					var urlEntity = urlEntityList[entityChangesList.IndexOf(entityChange)];
+					var docEntity = docEntityList[entityChangesList.IndexOf(entityChange)];
+					var urlDocEntity = urlDocEntityList[entityChangesList.IndexOf(entityChange)];
+					var userIdEntity = userIdList[entityChangesList.IndexOf(entityChange)];
+					var fromUserPOST1 = UserList.FirstOrDefault(u => u.Id == Guid.Parse(userIdEntity));
+
+					if (Guid.Parse(entityChange.EntityId) == DocId || docEntity == entityChange.EntityId && urlEntity == Url)
+					{
+						if (entityChange.ChangeType == Volo.Abp.Auditing.EntityChangeType.Created)
+						{
+							var fromUserPOST = UserList.FirstOrDefault(u => u.Id == Guid.Parse(userIdEntity));
+
+							<MudTimelineItem Color="MudBlazor.Color.Info">
+								<ItemDot>
+									<MudAvatar Size="MudBlazor.Size.Medium" Image="@(authServerUrl + "/api/account/profile-picture-file/" + userIdEntity.ToString())" />
+								</ItemDot>
+								<ItemContent>
+									<MudText Typo="Typo.body2">
+										@if (CurrentUser.Id == Guid.Parse(userIdEntity))
+										{
+											<b style="font-weight: 500;">You</b>
+										}
+										else if (fromUserPOST != null)
+										{
+											<b style="font-weight: 500;">@fromUserPOST.Name</b>
+										}
+										else
+										{
+											<span style="color: red;">Unknown User</span>
+										}
+										created this. - @GetTimeAgo(entityChange.ChangeTime)
+									</MudText>
+								</ItemContent>
+							</MudTimelineItem>
+						}
+						else if (entityChange.ChangeType == Volo.Abp.Auditing.EntityChangeType.Updated)
+						{
+							var fromUserPUT = UserList.FirstOrDefault(u => u.Id == Guid.Parse(userIdEntity));
+
+							foreach (var history in entityChange.PropertyChanges)
+							{
+								<MudTimelineItem Color="MudBlazor.Color.Info">
+									<ItemDot>
+										<MudAvatar Size="MudBlazor.Size.Medium" Image="@(authServerUrl + "/api/account/profile-picture-file/" +  userIdEntity.ToString())" />
+									</ItemDot>
+									<ItemContent>
+										<MudText Typo="Typo.body2">
+											@if (CurrentUser.Id == Guid.Parse(userIdEntity))
+											{
+												<b style="font-weight: 500;">You</b>
+											}
+											else if (fromUserPUT != null)
+											{
+												<b style="font-weight: 500;">@fromUserPUT.Name</b>
+											}
+											else
+											{
+												<span style="color: red;">Unknown User</span>
+											}
+											changed value of @history.PropertyName
+											from <b style="font-weight: 500;">@(history.OriginalValue == "null" ? "\"\"" : TruncateText(history.OriginalValue, 30))</b>
+											to <b style="font-weight: 500;">@(history.NewValue == null ? "\"\"" : TruncateText(history.NewValue, 30))</b> in @GetLastSegmentAfterDot(entityChange.EntityTypeFullName) - @GetTimeAgo(entityChange.ChangeTime)
+										</MudText>
+									</ItemContent>
+								</MudTimelineItem>
+							}
+						}
+					}
+
+					if (docEntity == DocId.ToString() && urlEntity == Url && docEntity != Guid.Empty.ToString() && docEntity != entityChange.EntityId.ToString())
+					{
+						if (entityChange.ChangeType == Volo.Abp.Auditing.EntityChangeType.Created)
+						{
+							var fromUserPOST = UserList.FirstOrDefault(u => u.Id == Guid.Parse(userIdEntity));
+
+							<MudTimelineItem Color="MudBlazor.Color.Info">
+								<ItemDot>
+									<MudAvatar Size="MudBlazor.Size.Medium" Image="@(authServerUrl + "/api/account/profile-picture-file/" + userIdEntity.ToString())" />
+								</ItemDot>
+								<ItemContent>
+									<MudText Typo="Typo.body2">
+										@if (CurrentUser.Id == Guid.Parse(userIdEntity))
+										{
+											<b style="font-weight: 500;">You</b>
+										}
+										else if (fromUserPOST != null)
+										{
+											<b style="font-weight: 500;">@fromUserPOST.Name</b>
+										}
+										else
+										{
+											<span style="color: red;">Unknown User</span>
+										}
+										added rows for  @GetLastSegmentAfterDot(entityChange.EntityTypeFullName). - @GetTimeAgo(entityChange.ChangeTime)
+									</MudText>
+								</ItemContent>
+							</MudTimelineItem>
+						}
+						else if (entityChange.ChangeType == Volo.Abp.Auditing.EntityChangeType.Updated)
+						{
+							var fromUserPUT = UserList.FirstOrDefault(u => u.Id == Guid.Parse(userIdEntity));
+
+							foreach (var history in entityChange.PropertyChanges)
+							{
+								<MudTimelineItem Color="MudBlazor.Color.Info">
+									<ItemDot>
+										<MudAvatar Size="MudBlazor.Size.Medium" Image="@(authServerUrl + "/api/account/profile-picture-file/" +  userIdEntity.ToString())" />
+									</ItemDot>
+									<ItemContent>
+										<MudText Typo="Typo.body2">
+											@if (CurrentUser.Id == Guid.Parse(userIdEntity))
+											{
+												<b style="font-weight: 500;">You</b>
+											}
+											else if (fromUserPUT != null)
+											{
+												<b style="font-weight: 500;">@fromUserPUT.Name</b>
+											}
+											else
+											{
+												<span style="color: red;">Unknown User</span>
+											}
+											changed value for the row of @AddSpaces(history.PropertyName)
+											from <b style="font-weight: 500;">@(history.OriginalValue == "null" ? "\"\"" : TruncateText(history.OriginalValue, 30))</b>
+											to <b style="font-weight: 500;">@(history.NewValue == null ? "\"\"" : TruncateText(history.NewValue, 30))</b> in @GetLastSegmentAfterDot(entityChange.EntityTypeFullName) - @GetTimeAgo(entityChange.ChangeTime)
+										</MudText>
+									</ItemContent>
+								</MudTimelineItem>
+							}
+						}
+					}
+				}
+			</MudTimeline>
+		</DxTabPage>
+	</DxTabs>
+</Card>
+
+

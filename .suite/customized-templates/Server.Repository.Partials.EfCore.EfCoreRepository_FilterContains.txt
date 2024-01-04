@@ -1,0 +1,2 @@
+##07084F95A749AA02409F24645122775E##
+                    .WhereIf(!string.IsNullOrWhiteSpace(%%property-name-camelcase%%), e => e.%%property-name%%.ToLower().Contains(%%property-name-camelcase%%.ToLower()))

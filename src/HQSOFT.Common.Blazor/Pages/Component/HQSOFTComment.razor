@@ -1,0 +1,64 @@
+﻿@rendermode InteractiveServer
+
+@using Blazorise.Components
+@using DevExpress.Blazor
+
+@using Microsoft.AspNetCore.Http
+@using global::HQSOFT.Common.Blazor
+@using global::HQSOFT.Common.Shared
+@using global::HQSOFT.Common.Comments
+@using global::HQSOFT.Common.Notifications
+@using global::HQSOFT.Common.Blazor.Pages.RichTextEdit
+
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using Microsoft.AspNetCore.SignalR.Client
+
+@using Microsoft.Extensions.Configuration
+@using Volo.Abp.AspNetCore.Components.Web
+@using Volo.Abp.Identity
+@using Volo.Abp.MultiTenancy
+@using Volo.Abp.Application.Dtos
+@using Volo.Abp.SettingManagement
+@using Volo.Abp.SettingManagement.Localization
+@using Volo.Abp.AspNetCore.Components.Messages
+@using Volo.Abp.AspNetCore.Components.Web.Configuration
+
+@inherits CommonComponentBase
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject AbpBlazorMessageLocalizerHelper<AbpSettingManagementResource> LH
+@inject ICurrentTenant CurrentTenant
+@inject IConfiguration Configuration
+@inject IUiMessageService UiMessageService
+@inject INotificationsAppService NotificationsAppService
+@inject ICommentsAppService CommentsAppService
+@inject IIdentityUserAppService IdentityUserAppService
+@inject IEmailSettingsAppService EmailSettingsAppService
+@inject IHttpContextAccessor HttpContextAccessor
+
+<Validations Model="_message" @ref="CheckNull"></Validations>
+<EditForm Model="@_message" OnValidSubmit="SendMessage">
+	<DataAnnotationsValidator />
+	<Blazorise.ValidationSummary />
+	<Card>
+		<CardBody>
+			<CardTitle>
+				<Strong>@L["Comment"]</Strong>
+				</CardTitle>
+				<HQSOFTRichTextEdit @ref="richTextEditRef">
+					<Toolbar>
+						<ToolbarGroup />
+					</Toolbar>
+					<Editor></Editor>
+				</HQSOFTRichTextEdit>
+				<br />
+				<Button Clicked="CreateCommentAsync" Color="Color.Primary"> Comment </Button>
+			</CardBody>
+		</Card>
+	</EditForm>
+
+	@code {
+
+ }

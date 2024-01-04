@@ -1,0 +1,90 @@
+﻿@attribute [Authorize(CommonPermissions.TaskAssignments.Default)]
+@attribute [Authorize(IdentityPermissions.Users.Default)]
+
+@using global::HQSOFT.Common.TaskAssignments
+@using global::HQSOFT.Common.Localization
+@using global::HQSOFT.Common.Shared
+@using global::HQSOFT.Common.Permissions 
+ 
+@using Blazorise.Components;
+@using DevExpress.Blazor;
+
+@using Microsoft.AspNetCore.Components.Authorization;
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.Extensions.Configuration;
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.Extensions.Localization
+@using Microsoft.AspNetCore.Components.Web
+
+@using Volo.Abp.AspNetCore.Components.Messages;
+@using Volo.Abp.BlazoriseUI.Components
+@using Volo.Abp.MultiTenancy;
+@using Volo.Abp.Identity;
+ 
+@inherits CommonComponentBase
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ICurrentTenant CurrentTenant
+@inject IConfiguration Configuration
+@inject IUiMessageService UiMessageService
+@inject IIdentityUserAppService IdentityUserAppService
+
+
+
+@inject ITaskAssignmentsAppService TaskAssignmentsAppService
+
+@* ************************* EDIT MODAL TASK ASSIGNMENT ************************* *@
+
+<div class="d-flex flex-fill pt-1 pb-2 w-100">
+    <DxFormLayout>
+        <DxFormLayoutItem Caption="@L["AssignTo"]" ColSpanLg="12" ColSpanMd="12">
+            <DxTagBox Data="@UserList"
+                TData="IdentityUserDto"
+                TValue="IdentityUserDto"
+                CssClass="cw-480"
+                @bind-Values="SelectedUsers"
+                      ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto">
+                <TagTemplate Context="tagInfo">
+                    <div>
+                        <img src="@(AuthServerUrl + "/api/account/profile-picture-file/" + tagInfo.DataItem.Id.ToString())" width="21" />
+                        @tagInfo.DataItem.Name
+                        <Button Clicked="@tagInfo.RemoveTagAction" @onclick:stopPropagation>
+                            <Icon Name="@("fa fa-times-circle")" IconSize="IconSize.Small" TextColor="TextColor.Secondary" />
+                        </Button>
+                    </div>
+                </TagTemplate>
+                <ItemTemplate Context="itemInfo">
+                    <div>
+                        <img src="@(AuthServerUrl + "/api/account/profile-picture-file/" + itemInfo.Id.ToString())" width="21" />
+                            <span>@itemInfo.Name</span>
+                            <span>@itemInfo.Email</span>
+                    </div>
+                </ItemTemplate>
+            </DxTagBox>
+        </DxFormLayoutItem>
+        <DxFormLayoutItem Caption="@L["DueDate"]" ColSpanLg="6" ColSpanMd="12">
+            <DxDateEdit @bind-Date="@TaskAssignment.DueDate" />
+        </DxFormLayoutItem>
+        <DxFormLayoutItem Caption="@L["Priority"]" ColSpanLg="6" ColSpanMd="12">
+            <DxComboBox Data="@PriorityCollection"
+                        @bind-Value="@TaskAssignment.Priority"
+                        TextFieldName="DisplayName"
+                        ValueFieldName="Value"
+                        FilteringMode="DataGridFilteringMode.Contains"
+                        DisplayFormat="{0}"
+                        EditFormat="{0}"
+                        InputCssClass="focus-value"
+                        ShowValidationIcon="true"/>
+        </DxFormLayoutItem>
+        <DxFormLayoutItem Caption="@L["Comment"]" ColSpanLg="12" ColSpanMd="12">
+            <DxMemo @bind-Text="@TaskAssignment.Comment"
+                    BindValueMode="BindValueMode.OnInput"/>
+        </DxFormLayoutItem>
+    </DxFormLayout>
+</div>
+<div align = "right">
+    <Button Color="Blazorise.Color.Primary"
+            Clicked="AddAssigment_Click">
+        @L["Add"]
+    </Button>
+</div>

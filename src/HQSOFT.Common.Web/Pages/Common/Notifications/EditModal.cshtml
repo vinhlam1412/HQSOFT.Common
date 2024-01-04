@@ -1,0 +1,57 @@
+@page
+@using Microsoft.AspNetCore.Mvc.Localization
+@using HQSOFT.Common.Localization
+@using HQSOFT.Common.Web.Pages.Common.Notifications
+@using Volo.Abp.AspNetCore.Mvc.UI.Bootstrap.TagHelpers.Modal
+@using HQSOFT.Common.Notifications;
+@using System.Globalization
+@inject IHtmlLocalizer<CommonResource> L
+@model EditModalModel
+@{
+    Layout = null;
+}
+
+<form data-ajaxForm="true" asp-page="/Common/Notifications/EditModal" autocomplete="off">
+    <abp-modal id="NotificationEditModal">
+        <abp-modal-header title="@L["Update"].Value"></abp-modal-header>
+
+        <abp-modal-body>
+
+                    <abp-input asp-for="Id" />
+                    <abp-input asp-for="Notification.ConcurrencyStamp" hidden="true" suppress-label="true"/>
+                    
+
+            <abp-input asp-for="Notification.FromUserId"   />
+
+
+            <abp-input asp-for="Notification.ToUserId"   />
+
+
+            <abp-input asp-for="Notification.NotiTitle"   />
+
+
+            <abp-input asp-for="Notification.NotiBody"   />
+
+
+            <abp-input asp-for="Notification.IsRead"   />
+
+
+            <abp-input asp-for="Notification.DocId"   />
+
+
+            <abp-input asp-for="Notification.Url"   />
+
+
+            <abp-select asp-for="Notification.Type"   />
+
+                    
+                
+
+
+        </abp-modal-body>
+
+        <abp-modal-footer buttons="@(AbpModalButtons.Cancel|AbpModalButtons.Save)">
+
+        </abp-modal-footer>
+    </abp-modal>
+</form>

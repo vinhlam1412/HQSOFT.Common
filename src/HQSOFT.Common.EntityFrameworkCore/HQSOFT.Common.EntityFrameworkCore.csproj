@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\common.props" />
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <RootNamespace>HQSOFT.Common</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+      <PackageReference Include="Volo.Abp.EntityFrameworkCore" Version="8.0.0" />
+	  <PackageReference Include="Volo.Abp.SettingManagement.EntityFrameworkCore" Version="8.0.0" />
+	  <PackageReference Include="Volo.Abp.BlobStoring.Database.EntityFrameworkCore" Version="8.0.0" />
+	  <PackageReference Include="Volo.Abp.Identity.Pro.EntityFrameworkCore" Version="8.0.0" />
+	      <PackageReference Include="Volo.Abp.AuditLogging.EntityFrameworkCore" Version="8.0.0" />
+	  <PackageReference Include="Volo.FileManagement.EntityFrameworkCore" Version="8.0.0" />
+      <ProjectReference Include="..\HQSOFT.Common.Domain\HQSOFT.Common.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

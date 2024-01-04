@@ -1,0 +1,59 @@
+﻿@page "/camera"
+
+@using System.IO
+
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.JSInterop;
+
+@using System.Text;
+@using System.Net.Http;
+@using System.Net.Http.Headers;
+@using Volo.Abp.Data
+@using Volo.Abp.Content
+@using Volo.Abp.Http.Client
+@using Volo.Abp.Application.Dtos
+@using Volo.Abp.AspNetCore.Components.Messages
+
+@using Volo.FileManagement.Files
+@using Volo.FileManagement.Directories
+@using Volo.FileManagement.Localization
+@using Volo.FileManagement.Authorization
+
+@inherits CommonComponentBase
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+@inject IRemoteServiceConfigurationProvider RemoteServiceConfigurationProvider
+
+@inject IFileDescriptorAppService FileDescriptorAppService
+@inject IDirectoryDescriptorAppService DirectoryDescriptorAppService
+
+<div id="camera"></div>
+
+@code
+{
+	[Parameter]
+	public Guid DocId { get; set; }
+	[Parameter]
+	public string DocUrl { get; set; }
+	[Parameter]
+	public string DirectoryName { get; set; }
+	[Parameter]
+	public List<string> cameraList { get; set; } = new List<string>();
+	[Parameter]
+	public EventCallback Capture { get; set; }
+	[Parameter]
+	public EventCallback StopCamera { get; set; }
+	[Parameter]
+	public EventCallback StartCamera { get; set; }
+	[Parameter]
+	public EventCallback SwitchCamera { get; set; }
+	[Parameter]
+	public EventCallback SaveToDatabase { get; set; }
+
+	protected override async Task OnInitializedAsync()
+	{
+		await base.OnInitializedAsync();
+	}
+}

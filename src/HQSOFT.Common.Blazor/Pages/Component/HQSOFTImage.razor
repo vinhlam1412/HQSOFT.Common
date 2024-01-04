@@ -1,0 +1,206 @@
+﻿@using System.IO
+
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+
+@using Volo.Abp.Data
+@using Volo.Abp.Content
+@using Volo.Abp.Http.Client
+@using Volo.Abp.Application.Dtos
+@using Volo.Abp.AspNetCore.Components.Messages
+
+@using Volo.FileManagement.Files
+@using Volo.FileManagement.Directories
+@using Volo.FileManagement.Localization
+@using Volo.FileManagement.Authorization
+
+@inherits CommonComponentBase
+@inject IRemoteServiceConfigurationProvider RemoteServiceConfigurationProvider
+
+@inject IFileDescriptorAppService FileDescriptorAppService
+@inject IDirectoryDescriptorAppService DirectoryDescriptorAppService
+
+
+<div style="padding:1rem;"> 
+	<InputFile OnChange="@OnFileSelection" multiple></InputFile>
+</div>
+
+
+<Card Style="padding: 10px;">
+	<CardBody>
+		<Row>
+			<Column>
+				<div>
+					<CardDeck Style="height: max-content;">
+						@foreach (var imageId in uploadedImageIds)
+						{
+							var base64Image = base64Images[uploadedImageIds.IndexOf(imageId)];
+							var directoryName = directoryNames[uploadedImageIds.IndexOf(imageId)];
+
+							<Card>
+								<CardImage Source="@($"data:{imageType};base64,{base64Image}")" Alt="@directoryName" Style="height:6rem"></CardImage>
+								<CardBody Style="padding: 10px;">
+									<CardTitle Size="5" Style="font-size: xx-small;">@directoryName</CardTitle>
+								</CardBody>
+								<CardFooter Style="padding: 5px 10px;">
+									<Badge Color="Color.Danger">
+										<Tooltip Text="@(L["Delete"])">
+											<Icon Name="IconName.Delete" aria-label="@(L["Delete"])" Clicked="@(()=>DeleteImage(imageId))" />
+										</Tooltip>
+									</Badge>
+								</CardFooter>
+							</Card>
+						}
+					</CardDeck>
+				</div>
+			</Column>
+		</Row>
+	</CardBody>
+</Card>
+
+@code {
+	[Parameter]
+	public Guid DocId { get; set; }
+	[Parameter]
+	public string DocUrl { get; set; }
+	[Parameter]
+	public string DirectoryName { get; set; }
+
+	private Guid directoryId { get; set; }
+	private string? imageType { get; set; }
+	private string base64Image { get; set; } = ""; // Collection to store base64-encoded images
+	private CreateDirectoryInput CreateDirectory { get; set; }
+
+	public const string UrlName = "Url";
+	public const string DocIdName = "DocId";
+
+	IReadOnlyList<FileDescriptorDto> FileItemList = new List<FileDescriptorDto>();
+	private List<string> base64Images = new List<string>(); // Collection to store base64-encoded images
+	private List<Guid> uploadedImageIds = new List<Guid>();
+	private List<string> directoryNames = new List<string>();
+
+	private readonly IUiMessageService _uiMessageService;
+
+	public HQSOFTImage(IUiMessageService uiMessageService)
+	{
+		_uiMessageService = uiMessageService;
+	}
+
+	protected override async Task OnInitializedAsync()
+	{
+		await GetDirectoryAsync();
+		await GetFileContent();
+		await base.OnInitializedAsync(); // Gọi phương thức cơ sở
+	}
+
+	private async Task GetDirectoryAsync()
+	{
+		//Lấy Thư mục
+		var searchDirectoryList = await DirectoryDescriptorAppService.GetListAsync(null); /// Lấy tất cả các thư mục
+		var directory = searchDirectoryList.Items.FirstOrDefault(d => d.Name == DirectoryName);  /// Lấy ra thư mục có tên là "Inventory"
+
+		// Kiểm tra xem thư mục Inventory có tồn tại chưa
+		if (directory != null)  /// Nếu có thì lấy mã DirectoryId của folder đó
+		{
+			directoryId = directory.Id;
+		}
+		else ///Nếu chưa có thì tạo folder mới và đặt tên là Inventory
+		{
+			Console.WriteLine("Have not Dicrectory");
+			CreateDirectory = new CreateDirectoryInput
+				{
+					Name = DirectoryName,
+					ParentId = null
+				};
+			var createdDirectory = await DirectoryDescriptorAppService.CreateAsync(CreateDirectory);
+			directoryId = createdDirectory.Id;
+		}
+		StateHasChanged();
+	}
+
+	private async Task OnFileSelection(InputFileChangeEventArgs e)
+	{
+		if (DocId != Guid.Empty)
+		{
+			var files = e.GetMultipleFiles(); // get the files selected by the users
+			foreach (var file in files)
+			{
+				var resizedFile = await file.RequestImageFileAsync(file.ContentType, 500, 500); // resize the image file
+
+				var buffers = new byte[resizedFile.Size];
+				string imageType = resizedFile.ContentType;
+				using (var stream = resizedFile.OpenReadStream())
+				{
+					await stream.ReadAsync(buffers);
+				}
+				var editingImageFile = new CreateFileInputWithStream
+					{
+						Name = file.Name,
+						File = new RemoteStreamContent(
+								stream: new MemoryStream(buffers),
+								fileName: resizedFile.Name,
+								contentType: imageType,
+								disposeStream: true
+							)
+					};
+
+				editingImageFile.SetProperty(UrlName, DocUrl);
+				editingImageFile.SetProperty(DocIdName, DocId);
+				 
+				var image = await FileDescriptorAppService.CreateAsync(directoryId, editingImageFile);
+				await GetFileContent();
+				StateHasChanged();
+			}
+		}
+		else
+		{
+			await _uiMessageService.Warn(L["Message:SelectAnImage"]);
+		}
+	}
+
+	private async Task GetFileContent()
+	{
+		base64Images.Clear();
+		uploadedImageIds.Clear();
+		directoryNames.Clear();
+
+		var searchImageList = await FileDescriptorAppService.GetListAsync(directoryId);
+		var images = searchImageList.Items.ToList();
+
+		List<Guid> tempImageIds = new List<Guid>(); // Danh sách tạm thời lưu trữ image.Id
+		List<string> tempDirectoryNames = new List<string>(); // Danh sách tạm thời lưu trữ image.Name
+
+		foreach (var image in images)
+		{
+			var extraProperties = image.ExtraProperties;
+			var docId = extraProperties["DocId"];
+			var file = extraProperties["Url"];
+
+			if (Guid.TryParse((string)docId, out Guid docGuid) && docGuid == DocId && file.ToString() == DocUrl)
+			{
+				byte[] fileContent = await FileDescriptorAppService.GetContentAsync(image.Id);
+				base64Image = Convert.ToBase64String(fileContent);
+				base64Images.Add(base64Image);
+
+				tempImageIds.Add(image.Id); // Thêm image.Id vào danh sách tạm thời
+				tempDirectoryNames.Add(image.Name); // Thêm image.Name vào danh sách tạm thời
+			}
+		}
+
+		uploadedImageIds = tempImageIds;
+		directoryNames = tempDirectoryNames;
+
+		StateHasChanged();
+	}
+
+	private async Task DeleteImage(Guid imageId)
+	{
+		var confirmed = await _uiMessageService.Confirm(L["DeleteConfirmationMessage"]);
+		if (confirmed)
+		{
+			await FileDescriptorAppService.DeleteAsync(imageId);
+			await GetFileContent();
+		}
+	}
+}

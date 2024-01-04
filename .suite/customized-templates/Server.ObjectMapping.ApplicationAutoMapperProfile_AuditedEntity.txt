@@ -1,0 +1,3 @@
+##768C9C4F26BA4976B9303543BA94E495##
+            CreateMap<%%entity-name%%, %%entity-name%%Dto>().Ignore(x => x.IsChanged);
+            %%<if:ExportExcel>%%CreateMap<%%entity-name%%, %%entity-name%%ExcelDto>();%%</if:ExportExcel>%%

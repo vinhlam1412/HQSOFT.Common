@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\common.props" />
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <RootNamespace>HQSOFT.Common</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+      <PackageReference Include="Volo.Abp.AuditLogging.Application" Version="8.0.0" />
+      <PackageReference Include="Volo.Abp.Ddd.Application" Version="8.0.0" />
+      <PackageReference Include="Volo.Abp.AutoMapper" Version="8.0.0" />
+	  <PackageReference Include="Volo.Abp.Identity.Pro.Application" Version="8.0.0" />
+	  <PackageReference Include="Volo.Abp.SettingManagement.Application" Version="8.0.0" />
+	  <PackageReference Include="MiniExcel" Version="1.31.2" />
+	  <PackageReference Include="Volo.FileManagement.Application" Version="8.0.0" />
+	  <ProjectReference Include="..\HQSOFT.Common.Application.Contracts\HQSOFT.Common.Application.Contracts.csproj" />
+	  <ProjectReference Include="..\HQSOFT.Common.Domain\HQSOFT.Common.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

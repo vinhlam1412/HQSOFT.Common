@@ -1,0 +1,83 @@
+<abp-modal [busy]="service.isBusy" [(visible)]="service.isVisible">
+  <ng-template #abpHeader>
+    <!--<suite-custom-code-block-0>-->
+    <!--</suite-custom-code-block-0>-->
+    <h3>
+      <!--<suite-custom-code-block-1>-->
+      <!--</suite-custom-code-block-1>-->
+      {{ (service.selected ? 'AbpUi::Edit' : 'Common::NewComment') | abpLocalization }}
+      <!--<suite-custom-code-block-2>-->
+      <!--</suite-custom-code-block-2>-->
+    </h3>
+    <!--<suite-custom-code-block-3>-->
+    <!--</suite-custom-code-block-3>-->
+  </ng-template>
+
+  <ng-template #abpBody>
+    <!--<suite-custom-code-block-4>-->
+    <!--</suite-custom-code-block-4>-->
+    <form
+      [formGroup]="service.form"
+      id="comment"
+      (ngSubmit)="service.submitForm()"
+      validateOnSubmit
+    >
+      <!--<suite-custom-code-block-5>-->
+      <!--</suite-custom-code-block-5>-->
+
+      <div class="mt-2 fade-in-top">
+        <div class="mb-3">
+          <label class="form-label" for="comment-from-user-id">
+            {{ 'Common::FromUserId' | abpLocalization }}
+          </label>
+
+          <input
+            id="comment-from-user-id"
+            formControlName="fromUserId"
+            class="form-control"
+            autofocus
+          />
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="comment-content">
+            {{ 'Common::Content' | abpLocalization }}
+          </label>
+
+          <input id="comment-content" formControlName="content" class="form-control" />
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="comment-doc-id">
+            {{ 'Common::DocId' | abpLocalization }}
+          </label>
+
+          <input id="comment-doc-id" formControlName="docId" class="form-control" />
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="comment-url">
+            {{ 'Common::Url' | abpLocalization }}
+          </label>
+
+          <input id="comment-url" formControlName="url" class="form-control" />
+        </div>
+      </div>
+
+      <!--<suite-custom-code-block-6>-->
+      <!--</suite-custom-code-block-6>-->
+    </form>
+  </ng-template>
+
+  <ng-template #abpFooter>
+    <!--<suite-custom-code-block-7>-->
+    <!--</suite-custom-code-block-7>-->
+    <button type="button" class="btn btn-secondary" abpClose>
+      {{ 'AbpUi::Cancel' | abpLocalization }}
+    </button>
+    <!--<suite-custom-code-block-8>-->
+    <!--</suite-custom-code-block-8>-->
+    <abp-button iconClass="fa fa-check" buttonType="submit" formName="comment">
+      {{ 'AbpUi::Save' | abpLocalization }}
+    </abp-button>
+    <!--<suite-custom-code-block-9>-->
+    <!--</suite-custom-code-block-9>-->
+  </ng-template>
+</abp-modal>

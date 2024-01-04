@@ -1,0 +1,268 @@
+@page "/Common/ShareWiths"
+
+
+
+@attribute [Authorize(CommonPermissions.ShareWiths.Default)]
+@using global::HQSOFT.Common.ShareWiths
+@using global::HQSOFT.Common.Localization
+@using global::HQSOFT.Common.Shared
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.Extensions.Localization
+@using Microsoft.AspNetCore.Components.Web
+@using Blazorise
+@using Blazorise.Components
+@using Blazorise.DataGrid
+@using Volo.Abp.BlazoriseUI
+@using Volo.Abp.BlazoriseUI.Components
+@using Volo.Abp.ObjectMapping
+@using Volo.Abp.AspNetCore.Components.Messages
+@using Volo.Abp.AspNetCore.Components.Web.Theming.Layout
+@using global::HQSOFT.Common.Permissions
+
+
+
+@inherits CommonComponentBase
+@inject IShareWithsAppService ShareWithsAppService
+@inject IUiMessageService UiMessageService
+
+
+
+@* ************************* PAGE HEADER ************************* *@
+<PageHeader Title="@L["ShareWiths"]" BreadcrumbItems="BreadcrumbItems" Toolbar="Toolbar">
+
+</PageHeader>
+
+@* ************************* SEARCH ************************* *@
+<Card>
+    <CardBody>
+        <Form id="ShareWithSearchForm" class="mb-3">
+            <Addons>
+                <Addon AddonType="AddonType.Body">
+                    <TextEdit @bind-Text="@Filter.FilterText"
+                              Autofocus="true"
+                              Placeholder="@L["Search"]">
+                    </TextEdit>
+                </Addon>
+                <Addon AddonType="AddonType.End">
+                    <SubmitButton Form="ShareWithSearchForm" Clicked="GetShareWithsAsync">
+                        <Icon Name="IconName.Search" Class="me-1"></Icon>@L["Search"]
+                    </SubmitButton>
+                </Addon>
+            </Addons>
+        </Form>
+    </CardBody>
+</Card>
+
+@* ************************* DATA GRID ************************* *@
+<Card>
+    <CardBody>
+        <DataGrid TItem="ShareWithDto"
+                  Data="ShareWithList"
+                  ReadData="OnDataGridReadAsync"
+                  TotalItems="TotalCount"
+                  ShowPager="true"
+                  Responsive="true"
+                  PageSize="PageSize">
+            <DataGridColumns>
+                <DataGridEntityActionsColumn TItem="ShareWithDto" @ref="@EntityActionsColumn">
+                    <DisplayTemplate>
+                        <EntityActions TItem="ShareWithDto" EntityActionsColumn="@EntityActionsColumn">
+                            <EntityAction TItem="ShareWithDto"
+                                          Visible="@CanEditShareWith"
+                                          Clicked="async () => await OpenEditShareWithModalAsync(context)"
+                                          Text="@L["Edit"]"></EntityAction>
+                            <EntityAction TItem="ShareWithDto"
+                                          Visible="@CanDeleteShareWith"
+                                          Clicked="() => DeleteShareWithAsync(context)"
+                                          ConfirmationMessage="@(()=> L["DeleteConfirmationMessage"])"
+                                          Text="@L["Delete"]"></EntityAction>
+                        </EntityActions>
+                    </DisplayTemplate>
+                </DataGridEntityActionsColumn>
+               
+
+
+              <DataGridColumn TItem="ShareWithDto"
+                      Field="CanRead"
+                      Caption="@L["CanRead"]">
+                    <DisplayTemplate>
+                        @if (context.CanRead)
+                        {
+                            <Icon TextColor="TextColor.Success" Name="@IconName.Check" />
+                        }
+                        else
+                        {
+                            <Icon TextColor="TextColor.Danger" Name="@IconName.Times" />
+                        }
+                    </DisplayTemplate>
+              </DataGridColumn>
+
+
+              <DataGridColumn TItem="ShareWithDto"
+                      Field="CanWrite"
+                      Caption="@L["CanWrite"]">
+                    <DisplayTemplate>
+                        @if (context.CanWrite)
+                        {
+                            <Icon TextColor="TextColor.Success" Name="@IconName.Check" />
+                        }
+                        else
+                        {
+                            <Icon TextColor="TextColor.Danger" Name="@IconName.Times" />
+                        }
+                    </DisplayTemplate>
+              </DataGridColumn>
+
+
+              <DataGridColumn TItem="ShareWithDto"
+                      Field="CanSubmit"
+                      Caption="@L["CanSubmit"]">
+                    <DisplayTemplate>
+                        @if (context.CanSubmit)
+                        {
+                            <Icon TextColor="TextColor.Success" Name="@IconName.Check" />
+                        }
+                        else
+                        {
+                            <Icon TextColor="TextColor.Danger" Name="@IconName.Times" />
+                        }
+                    </DisplayTemplate>
+              </DataGridColumn>
+
+
+              <DataGridColumn TItem="ShareWithDto"
+                      Field="CanShare"
+                      Caption="@L["CanShare"]">
+                    <DisplayTemplate>
+                        @if (context.CanShare)
+                        {
+                            <Icon TextColor="TextColor.Success" Name="@IconName.Check" />
+                        }
+                        else
+                        {
+                            <Icon TextColor="TextColor.Danger" Name="@IconName.Times" />
+                        }
+                    </DisplayTemplate>
+              </DataGridColumn>
+
+
+              <DataGridColumn TItem="ShareWithDto"
+                      Field="Url"
+                      Caption="@L["Url"]">
+              </DataGridColumn>
+
+
+
+            </DataGridColumns>
+        </DataGrid>
+    </CardBody>
+</Card>
+
+@* ************************* CREATE MODAL ************************* *@
+<Modal @ref="CreateShareWithModal" Closing="@CreateShareWithModal.CancelClosingModalWhenFocusLost">
+    <ModalContent Centered="true">
+        <Form id="CreateShareWithForm">
+            <ModalHeader>
+                <ModalTitle>@L["NewShareWith"]</ModalTitle>
+                <CloseButton Clicked="CloseCreateShareWithModalAsync" />
+            </ModalHeader>
+            <ModalBody>
+                <Validations @ref="@NewShareWithValidations"
+                            Mode="ValidationMode.Auto"
+                            Model="@NewShareWith"
+                            ValidateOnLoad="false">
+                      
+                    <Field>
+                        <Check TValue="bool" @bind-Checked="@NewShareWith.CanRead" >@L["CanRead"]</Check>
+                    </Field>
+
+                    <Field>
+                        <Check TValue="bool" @bind-Checked="@NewShareWith.CanWrite" >@L["CanWrite"]</Check>
+                    </Field>
+
+                    <Field>
+                        <Check TValue="bool" @bind-Checked="@NewShareWith.CanSubmit" >@L["CanSubmit"]</Check>
+                    </Field>
+
+                    <Field>
+                        <Check TValue="bool" @bind-Checked="@NewShareWith.CanShare" >@L["CanShare"]</Check>
+                    </Field>
+
+                    <Validation>
+                        <Field>
+                            <FieldLabel>@L["Url"]</FieldLabel>
+                            <TextEdit @bind-Text="@NewShareWith.Url"  >
+                                <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                            </TextEdit>
+                        </Field>
+                    </Validation>
+                     
+                </Validations>
+            </ModalBody>
+            <ModalFooter>
+                <Button Color="Blazorise.Color.Secondary"
+                        Clicked="CloseCreateShareWithModalAsync">
+                    @L["Cancel"]
+                </Button>
+                <SubmitButton Form="CreateShareWithForm" Clicked="CreateShareWithAsync" />
+            </ModalFooter>
+        </Form>
+    </ModalContent>
+</Modal>
+
+@* ************************* EDIT MODAL ************************* *@
+<Modal @ref="EditShareWithModal" Closing="@EditShareWithModal.CancelClosingModalWhenFocusLost">
+    <ModalContent Centered="true">
+        <Form id="EditShareWithForm">
+            <ModalHeader>
+                <ModalTitle>@L["Update"]</ModalTitle>
+                <CloseButton Clicked="CloseEditShareWithModalAsync" />
+            </ModalHeader>
+            <ModalBody>
+                <Validations @ref="@EditingShareWithValidations"
+                            Mode="ValidationMode.Auto"
+                            Model="@EditingShareWith"
+                            ValidateOnLoad="false">
+                      
+                    <Field>
+                        <Check TValue="bool" @bind-Checked="@EditingShareWith.CanRead" >@L["CanRead"]</Check>
+                    </Field>
+
+                    <Field>
+                        <Check TValue="bool" @bind-Checked="@EditingShareWith.CanWrite" >@L["CanWrite"]</Check>
+                    </Field>
+
+                    <Field>
+                        <Check TValue="bool" @bind-Checked="@EditingShareWith.CanSubmit" >@L["CanSubmit"]</Check>
+                    </Field>
+
+                    <Field>
+                        <Check TValue="bool" @bind-Checked="@EditingShareWith.CanShare" >@L["CanShare"]</Check>
+                    </Field>
+
+                    <Validation>
+                        <Field>
+                            <FieldLabel>@L["Url"]</FieldLabel>
+                            <TextEdit @bind-Text="@EditingShareWith.Url"  >
+                                <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                            </TextEdit>
+                        </Field>
+                    </Validation>
+                     
+                    
+                </Validations>
+            </ModalBody>
+            <ModalFooter>
+                <Button Color="Blazorise.Color.Secondary"
+                        Clicked="CloseEditShareWithModalAsync">
+                    @L["Cancel"]
+                </Button>
+                <SubmitButton Form="CreateShareWithForm" Clicked="UpdateShareWithAsync" />
+            </ModalFooter>
+        </Form>
+    </ModalContent>
+</Modal>
